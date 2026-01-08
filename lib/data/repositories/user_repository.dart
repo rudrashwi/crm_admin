@@ -12,7 +12,11 @@ class UserRepository {
 
   Future<List<UserModel>> getEmployees() async {
     try {
-      final response = await _apiClient.get(ApiEndpoints.getEmployees);
+      final tenantId = PrefManager.getTenantId();
+      if (tenantId == null || tenantId.isEmpty) {
+        throw Exception('Tenant ID not found');
+      }
+      final response = await _apiClient.get(ApiEndpoints.getUsersByTenant(tenantId));
       return (response.data['data'] as List)
           .map((e) => UserModel.fromJson(e))
           .toList();
@@ -25,19 +29,21 @@ class UserRepository {
     required String username,
     required String email,
     required String fullName,
+    required String mobileNumber,
     required String password,
     required String role,
   }) async {
     try {
       final response = await _apiClient.post(
         ApiEndpoints.createUser,
-        options: Options(headers: {
+        extraHeaders: {
           'X-User-Id': PrefManager.getUserId(),
-        }),
+        },
         data: {
           'username': username,
           'email': email,
           'fullName': fullName,
+          'mobileNumber': mobileNumber,
           'password': password,
           'role': role,
         },
@@ -59,6 +65,19 @@ class UserRepository {
   Future<void> reactivateUser(String userId) async {
     try {
       await _apiClient.post(ApiEndpoints.reactivateUser(userId));
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> adminResetPassword(String userId, String newPassword) async {
+    try {
+      await _apiClient.post(
+        ApiEndpoints.adminResetPassword(userId),
+        data: {
+          'newPassword': newPassword,
+        },
+      );
     } catch (e) {
       rethrow;
     }

@@ -100,4 +100,15 @@ class LeadsProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  Future<bool> batchAssignLeads(List<String> leadIds, List<String> employeeIds) async {
+    try {
+      await _repository.batchAssignLeads(leadIds, employeeIds);
+      await fetchLeads();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    }
+  }
 }

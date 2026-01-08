@@ -47,10 +47,21 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> checkUsernameAvailability(String username) async {
+    try {
+      final response = await _repository.checkUsername(username);
+      return response.available;
+    } catch (e) {
+      debugPrint('Error checking username: $e');
+      return false;
+    }
+  }
+
   Future<bool> registerAdmin({
     required String username,
     required String email,
     required String fullName,
+    required String mobileNumber,
     required String password,
     required String companyName,
   }) async {
@@ -61,6 +72,7 @@ class AuthProvider extends ChangeNotifier {
         username: username,
         email: email,
         fullName: fullName,
+        mobileNumber: mobileNumber,
         password: password,
         companyName: companyName,
       );
@@ -73,19 +85,39 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> login(String username, String password) async {
+  Future<bool> login(String username, String password, String selectedRole) async {
     _setLoading(true);
     _setError(null);
     try {
       final response = await _repository.login(username, password);
+      // Allow login only for ADMIN or SUB_ADMIN role and match selected role
+      if (response.user.role != 'ADMIN' && response.user.role != 'SUB_ADMIN') {
+        _setError('Only users with ADMIN or SUB_ADMIN role are allowed to login.');
+        _setLoading(false);
+        return false;
+      }
+
+      // Check if selected role matches the user's actual role
+      if (response.user.role != selectedRole) {
+        _setError('Invalid credentials for the selected role.');
+        _setLoading(false);
+        return false;
+      }
+
       _user = response.user;
-      
+
       await PrefManager.setAccessToken(response.accessToken);
       await PrefManager.setTenantId(response.user.tenantId);
       await PrefManager.setUserId(response.user.id);
       await PrefManager.setUsername(response.user.username);
       await PrefManager.setRole(response.user.role);
+      await PrefManager.setEmail(response.user.email);
+      await PrefManager.setFullName(response.user.fullName);
       
+      // Verify what was saved
+      print('🔍 [AuthProvider] Saved userId: "${response.user.id}"');
+      print('🔍 [AuthProvider] Verified from storage: "${PrefManager.getUserId()}"');
+
       _setLoading(false);
       return true;
     } catch (e) {

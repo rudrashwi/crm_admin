@@ -6,6 +6,7 @@ class StatsCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const StatsCard({
     super.key,
@@ -13,12 +14,13 @@ class StatsCard extends StatelessWidget {
     required this.value,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
+    final card = Container(
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -66,5 +68,9 @@ class StatsCard extends StatelessWidget {
         ],
       ),
     );
+    if (onTap != null) {
+      return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(16), child: card);
+    }
+    return card;
   }
 }

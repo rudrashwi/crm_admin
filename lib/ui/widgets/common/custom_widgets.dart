@@ -39,7 +39,7 @@ class CustomButton extends StatelessWidget {
   }
 }
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   final String label;
   final String hint;
   final TextEditingController controller;
@@ -48,6 +48,8 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final Widget? suffixIcon;
   final void Function(String)? onChanged;
+  final bool enabled;
+  final int? maxLength;
 
   const CustomTextField({
     super.key,
@@ -59,7 +61,16 @@ class CustomTextField extends StatelessWidget {
     this.validator,
     this.suffixIcon,
     this.onChanged,
+    this.enabled = true,
+    this.maxLength,
   });
+
+  @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  bool _obscureText = true;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +78,7 @@ class CustomTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -76,14 +87,29 @@ class CustomTextField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextFormField(
-          controller: controller,
-          obscureText: isPassword,
-          keyboardType: keyboardType,
-          validator: validator,
-          onChanged: onChanged,
+          controller: widget.controller,
+          obscureText: widget.isPassword && _obscureText,
+          keyboardType: widget.keyboardType,
+          validator: widget.validator,
+          onChanged: widget.onChanged,
+          enabled: widget.enabled,
+          maxLength: widget.maxLength,
           decoration: InputDecoration(
-            hintText: hint,
-            suffixIcon: suffixIcon,
+            hintText: widget.hint,
+            suffixIcon: widget.isPassword
+                ? IconButton(
+                    icon: Icon(
+                      _obscureText ? Icons.visibility : Icons.visibility_off,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                  )
+                : widget.suffixIcon,
+            counterText: widget.maxLength != null ? '' : null,
           ),
         ),
       ],

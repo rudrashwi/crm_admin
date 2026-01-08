@@ -56,6 +56,7 @@ class UserProvider extends ChangeNotifier {
     required String username,
     required String email,
     required String fullName,
+    required String mobileNumber,
     required String password,
     required String role,
   }) async {
@@ -65,6 +66,7 @@ class UserProvider extends ChangeNotifier {
         username: username,
         email: email,
         fullName: fullName,
+        mobileNumber: mobileNumber,
         password: password,
         role: role,
       );
@@ -82,6 +84,11 @@ class UserProvider extends ChangeNotifier {
     try {
       await _repository.terminateUser(userId);
       await fetchUsers();
+      // Optimistically update selected employee active state so UI reacts immediately
+      if (_selectedEmployee != null) {
+        _selectedEmployee = _selectedEmployee!.copyWith(isActive: false);
+        notifyListeners();
+      }
       return true;
     } catch (e) {
       _error = _handleError(e);
@@ -93,6 +100,11 @@ class UserProvider extends ChangeNotifier {
     try {
       await _repository.reactivateUser(userId);
       await fetchUsers();
+      // Optimistically update selected employee active state so UI reacts immediately
+      if (_selectedEmployee != null) {
+        _selectedEmployee = _selectedEmployee!.copyWith(isActive: true);
+        notifyListeners();
+      }
       return true;
     } catch (e) {
       _error = _handleError(e);
@@ -109,5 +121,19 @@ class UserProvider extends ChangeNotifier {
       _error = _handleError(e);
     }
     _setLoading(false);
+  }
+
+  Future<bool> resetPassword(String userId, String newPassword) async {
+    _setLoading(true);
+    try {
+      await _repository.adminResetPassword(userId, newPassword);
+      _error = null;
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _error = _handleError(e);
+      _setLoading(false);
+      return false;
+    }
   }
 }

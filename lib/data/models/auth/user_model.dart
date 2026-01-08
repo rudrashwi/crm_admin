@@ -8,6 +8,7 @@ class UserModel {
   final String companyName;
   final String? managerId;
   final String? managerName;
+  final String? mobileNumber;
   final bool isActive;
   final String? createdAt;
   final String? lastLogin;
@@ -22,22 +23,27 @@ class UserModel {
     required this.companyName,
     this.managerId,
     this.managerName,
+    this.mobileNumber,
     required this.isActive,
     this.createdAt,
     this.lastLogin,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final email = json['email'] ?? '';
+    final username = json['username'] ?? (email.isNotEmpty ? email.split('@')[0] : 'unknown');
+    
     return UserModel(
-      id: json['id'] ?? '',
-      username: json['username'] ?? '',
-      email: json['email'] ?? '',
-      fullName: json['fullName'] ?? '',
+      id: json['userId'] ?? json['id'] ?? json['employeeId'] ?? '',
+      username: username,
+      email: email,
+      fullName: json['fullName'] ?? json['employeeName'] ?? 'Unknown',
       role: json['role'] ?? '',
       tenantId: json['tenantId'] ?? '',
       companyName: json['companyName'] ?? '',
       managerId: json['managerId'],
       managerName: json['managerName'],
+      mobileNumber: json['mobileNumber'],
       isActive: json['isActive'] ?? false,
       createdAt: json['createdAt'],
       lastLogin: json['lastLogin'],

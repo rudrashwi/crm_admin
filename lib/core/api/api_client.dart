@@ -49,35 +49,71 @@ class ApiClient {
     ));
   }
 
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters, Options? options}) async {
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters, Options? options, Map<String, dynamic>? extraHeaders}) async {
     try {
-      return await _dio.get(path, queryParameters: queryParameters, options: options);
+      final mergedOptions = _mergeOptions(options, extraHeaders);
+      return await _dio.get(path, queryParameters: queryParameters, options: mergedOptions);
     } on DioException catch (e) {
       rethrow;
     }
   }
 
-  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options}) async {
+  Future<Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options, Map<String, dynamic>? extraHeaders}) async {
     try {
-      return await _dio.post(path, data: data, queryParameters: queryParameters, options: options);
+      final mergedOptions = _mergeOptions(options, extraHeaders);
+      return await _dio.post(path, data: data, queryParameters: queryParameters, options: mergedOptions);
     } on DioException catch (e) {
       rethrow;
     }
   }
 
-  Future<Response> put(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options}) async {
+  Future<Response> put(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options, Map<String, dynamic>? extraHeaders}) async {
     try {
-      return await _dio.put(path, data: data, queryParameters: queryParameters, options: options);
+      final mergedOptions = _mergeOptions(options, extraHeaders);
+      return await _dio.put(path, data: data, queryParameters: queryParameters, options: mergedOptions);
     } on DioException catch (e) {
       rethrow;
     }
   }
 
-  Future<Response> delete(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options}) async {
+  Future<Response> delete(String path, {dynamic data, Map<String, dynamic>? queryParameters, Options? options, Map<String, dynamic>? extraHeaders}) async {
     try {
-      return await _dio.delete(path, data: data, queryParameters: queryParameters, options: options);
+      final mergedOptions = _mergeOptions(options, extraHeaders);
+      return await _dio.delete(path, data: data, queryParameters: queryParameters, options: mergedOptions);
     } on DioException catch (e) {
       rethrow;
     }
+  }
+
+  Options _mergeOptions(Options? options, Map<String, dynamic>? extraHeaders) {
+    if (extraHeaders == null || extraHeaders.isEmpty) {
+      return options ?? Options();
+    }
+    
+    // Create new options with extra headers
+    // The interceptor will add Authorization and X-Tenant-Id automatically
+    final headers = <String, dynamic>{};
+    if (options?.headers != null) {
+      headers.addAll(options!.headers!);
+    }
+    headers.addAll(extraHeaders);
+    
+    return Options(
+      method: options?.method,
+      sendTimeout: options?.sendTimeout,
+      receiveTimeout: options?.receiveTimeout,
+      extra: options?.extra,
+      headers: headers,
+      responseType: options?.responseType,
+      contentType: options?.contentType,
+      validateStatus: options?.validateStatus,
+      receiveDataWhenStatusError: options?.receiveDataWhenStatusError,
+      followRedirects: options?.followRedirects,
+      maxRedirects: options?.maxRedirects,
+      persistentConnection: options?.persistentConnection,
+      requestEncoder: options?.requestEncoder,
+      responseDecoder: options?.responseDecoder,
+      listFormat: options?.listFormat,
+    );
   }
 }

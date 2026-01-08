@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:crm_admin/core/constants/app_colors.dart';
 import 'package:crm_admin/logic/providers/leads_provider.dart';
+import 'package:crm_admin/ui/screens/leads/view_leads_screen.dart';
 import 'package:crm_admin/ui/widgets/common/custom_widgets.dart';
 
 class AddLeadScreen extends StatefulWidget {
@@ -45,10 +46,16 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
               const SizedBox(height: 20),
               CustomTextField(
                 label: 'Contact Phone',
-                hint: 'Enter phone number',
+                hint: 'Enter 10-digit phone number',
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+                maxLength: 10,
+                validator: (v) {
+                  if (v!.isEmpty) return 'Required';
+                  if (v.length != 10) return 'Must be exactly 10 digits';
+                  if (!RegExp(r'^[0-9]{10}$').hasMatch(v)) return 'Only numbers allowed';
+                  return null;
+                },
               ),
               const SizedBox(height: 20),
               CustomTextField(
@@ -56,7 +63,11 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
                 hint: 'Enter email',
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+                validator: (v) {
+                  if (v!.isEmpty) return 'Required';
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return 'Enter valid email';
+                  return null;
+                },
               ),
               const SizedBox(height: 20),
               CustomTextField(
@@ -83,6 +94,8 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Lead created successfully!'), backgroundColor: AppColors.success),
                           );
+                          // Clear the form after successful creation
+                          _formKey.currentState!.reset();
                           _nameController.clear();
                           _phoneController.clear();
                           _emailController.clear();

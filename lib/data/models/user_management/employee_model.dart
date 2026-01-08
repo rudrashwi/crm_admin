@@ -42,10 +42,60 @@ class EmployeeDetail {
       closedLeads: json['closedLeads'] ?? 0,
       conversionRate: (json['conversionRate'] ?? 0).toDouble(),
       recentLeads: (json['recentLeads'] as List? ?? [])
-          .map((e) => LeadModel.fromJson(e))
+          .map((e) {
+            // Map leadId to id for LeadModel compatibility
+            if (e['leadId'] != null && e['id'] == null) {
+              e['id'] = e['leadId'];
+            }
+            // Map assignedAt to createdAt and lastUpdated to updatedAt
+            if (e['assignedAt'] != null && e['createdAt'] == null) {
+              e['createdAt'] = e['assignedAt'];
+            }
+            if (e['lastUpdated'] != null && e['updatedAt'] == null) {
+              e['updatedAt'] = e['lastUpdated'];
+            }
+            // Ensure required fields have defaults
+            e['tenantId'] ??= '';
+            e['contactPhone'] ??= '';
+            e['email'] ??= '';
+            e['requirementMessage'] ??= '';
+            e['source'] ??= '';
+            e['createdBy'] ??= '';
+            return LeadModel.fromJson(e);
+          })
           .toList(),
       managerId: json['managerId'],
       managerName: json['managerName'],
+    );
+  }
+
+  EmployeeDetail copyWith({
+    String? employeeId,
+    String? employeeName,
+    String? email,
+    String? role,
+    bool? isActive,
+    int? totalAssignedLeads,
+    int? activeLeads,
+    int? closedLeads,
+    double? conversionRate,
+    List<LeadModel>? recentLeads,
+    String? managerId,
+    String? managerName,
+  }) {
+    return EmployeeDetail(
+      employeeId: employeeId ?? this.employeeId,
+      employeeName: employeeName ?? this.employeeName,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      isActive: isActive ?? this.isActive,
+      totalAssignedLeads: totalAssignedLeads ?? this.totalAssignedLeads,
+      activeLeads: activeLeads ?? this.activeLeads,
+      closedLeads: closedLeads ?? this.closedLeads,
+      conversionRate: conversionRate ?? this.conversionRate,
+      recentLeads: recentLeads ?? this.recentLeads,
+      managerId: managerId ?? this.managerId,
+      managerName: managerName ?? this.managerName,
     );
   }
 }

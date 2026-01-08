@@ -17,9 +17,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _fullNameController = TextEditingController();
+  final _mobileNumberController = TextEditingController();
   final _passwordController = TextEditingController();
   final _companyController = TextEditingController();
-  
+
   bool _isUsernameAvailable = false;
   bool _isCheckingUsername = false;
   List<String> _suggestions = [];
@@ -30,7 +31,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       if (value.length > 2) {
         setState(() => _isCheckingUsername = true);
-        final response = await context.read<AuthProvider>().checkUsername(value);
+        final response = await context.read<AuthProvider>().checkUsername(
+          value,
+        );
         if (mounted) {
           setState(() {
             _isUsernameAvailable = response?.available ?? false;
@@ -58,6 +61,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.25,
+                      height: MediaQuery.of(context).size.width * 0.25,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        border: Border.all(color: AppColors.primary, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 15,
+                            spreadRadius: 3,
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(6),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              decoration: const BoxDecoration(
+                                color: AppColors.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.admin_panel_settings,
+                                size: 40,
+                                color: Colors.white,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
               const Text(
                 'Create Admin Account',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -67,32 +113,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 32),
               CustomTextField(
                 label: 'Username',
-                hint: 'Choose a unique username',
+                hint: 'Choose a unique username (alphanumeric and _ only)',
                 controller: _usernameController,
                 onChanged: _onUsernameChanged,
                 suffixIcon: _isCheckingUsername
                     ? const Padding(
                         padding: EdgeInsets.all(12),
-                        child: SizedBox(height: 10, width: 10, child: CircularProgressIndicator(strokeWidth: 2)),
+                        child: SizedBox(
+                          height: 10,
+                          width: 10,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       )
                     : Icon(
                         _isUsernameAvailable ? Icons.check_circle : Icons.error,
-                        color: _isUsernameAvailable ? AppColors.success : AppColors.error,
+                        color: _isUsernameAvailable
+                            ? AppColors.success
+                            : AppColors.error,
                       ),
-                validator: (v) => !_isUsernameAvailable ? 'Username not available' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Required';
+                  if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(v))
+                    return 'Only letters, numbers and underscore allowed';
+                  if (!_isUsernameAvailable) return 'Username not available';
+                  return null;
+                },
               ),
               if (_suggestions.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                const Text('Suggestions:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Suggestions:',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
                 Wrap(
                   spacing: 8,
-                  children: _suggestions.map((s) => ActionChip(
-                    label: Text(s, style: const TextStyle(fontSize: 12)),
-                    onPressed: () {
-                      _usernameController.text = s;
-                      _onUsernameChanged(s);
-                    },
-                  )).toList(),
+                  children: _suggestions
+                      .map(
+                        (s) => ActionChip(
+                          label: Text(s, style: const TextStyle(fontSize: 12)),
+                          onPressed: () {
+                            _usernameController.text = s;
+                            _onUsernameChanged(s);
+                          },
+                        ),
+                      )
+                      .toList(),
                 ),
               ],
               const SizedBox(height: 20),
@@ -112,6 +177,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 20),
               CustomTextField(
+                label: 'Mobile Number',
+                hint: 'Enter 10-digit mobile number',
+                controller: _mobileNumberController,
+                keyboardType: TextInputType.phone,
+                maxLength: 10,
+                validator: (v) {
+                  if (v!.isEmpty) return 'Required';
+                  if (v.length != 10) return 'Must be exactly 10 digits';
+                  if (!RegExp(r'^[0-9]{10}$').hasMatch(v))
+                    return 'Only numbers allowed';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              CustomTextField(
                 label: 'Company Name',
                 hint: 'Enter your company name',
                 controller: _companyController,
@@ -120,10 +200,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 20),
               CustomTextField(
                 label: 'Password',
-                hint: 'Create a strong password',
+                hint: 'Create a strong password (min 8 characters)',
                 controller: _passwordController,
                 isPassword: true,
-                validator: (v) => v!.length < 6 ? 'Min 6 characters' : null,
+                validator: (v) =>
+                    v!.length < 8 ? 'Minimum 8 characters required' : null,
               ),
               const SizedBox(height: 40),
               Consumer<AuthProvider>(
@@ -137,13 +218,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           username: _usernameController.text,
                           email: _emailController.text,
                           fullName: _fullNameController.text,
+                          mobileNumber: _mobileNumberController.text,
                           password: _passwordController.text,
                           companyName: _companyController.text,
                         );
                         if (success && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Registered Successfully! Please Login.'),
+                              content: Text(
+                                'Registered Successfully! Please Login.',
+                              ),
                               backgroundColor: AppColors.success,
                               behavior: SnackBarBehavior.floating,
                             ),

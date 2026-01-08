@@ -75,4 +75,18 @@ class LeadsRepository {
       rethrow;
     }
   }
+
+  Future<void> batchAssignLeads(List<String> leadIds, List<String> employeeIds) async {
+    try {
+      await _apiClient.post(
+        ApiEndpoints.batchAssignLeads,
+        data: {
+          'leadIds': leadIds,
+          'employeeIds': employeeIds,
+        },
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

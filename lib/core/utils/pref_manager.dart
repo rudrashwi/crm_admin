@@ -6,6 +6,8 @@ class PrefManager {
   static const String _keyUserId = 'user_id';
   static const String _keyUsername = 'username';
   static const String _keyRole = 'role';
+  static const String _keyEmail = 'email';
+  static const String _keyFullName = 'full_name';
 
   static late SharedPreferences _prefs;
 
@@ -37,6 +39,16 @@ class PrefManager {
       await _prefs.setString(_keyRole, role);
 
   static String? getRole() => _prefs.getString(_keyRole);
+
+  static Future<void> setEmail(String email) async =>
+      await _prefs.setString(_keyEmail, email);
+
+  static String? getEmail() => _prefs.getString(_keyEmail);
+
+  static Future<void> setFullName(String fullName) async =>
+      await _prefs.setString(_keyFullName, fullName);
+
+  static String? getFullName() => _prefs.getString(_keyFullName);
 
   static Future<void> clear() async => await _prefs.clear();
 }

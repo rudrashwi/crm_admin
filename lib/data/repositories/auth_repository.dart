@@ -24,6 +24,7 @@ class AuthRepository {
     required String username,
     required String email,
     required String fullName,
+    required String mobileNumber,
     required String password,
     required String companyName,
   }) async {
@@ -34,6 +35,7 @@ class AuthRepository {
           'username': username,
           'email': email,
           'fullName': fullName,
+          'mobileNumber': mobileNumber,
           'password': password,
           'companyName': companyName,
         },
@@ -53,7 +55,12 @@ class AuthRepository {
           'password': password,
         },
       );
-      return LoginResponse.fromJson(response.data['data']);
+      print('🔍 [AuthRepository] Login response data: ${response.data}');
+      final loginResponse = LoginResponse.fromJson(response.data['data']);
+      print('🔍 [AuthRepository] Parsed userId: "${loginResponse.user.id}"');
+      print('🔍 [AuthRepository] Parsed username: "${loginResponse.user.username}"');
+      print('🔍 [AuthRepository] Parsed role: "${loginResponse.user.role}"');
+      return loginResponse;
     } catch (e) {
       rethrow;
     }
