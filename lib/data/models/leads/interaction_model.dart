@@ -56,14 +56,14 @@ class CallType {
   static const String cancelled = 'CANCELLED';
 
   static List<String> get all => [
-    newLead,
-    assigned,
-    followUpScheduled,
-    callbackRequested,
-    noResponse,
-    completed,
-    closed,
-    cancelled,
+    'NEW',
+    'ASSIGNED',
+    'QUALIFIED',
+    'FOLLOW_UP_SCHEDULED',
+    'CALLBACK_REQUESTED',
+    'NO_RESPONSE',
+    'CONVERTED',
+    'CANCELLED',
   ];
 
   static String getDisplayName(String callType) {

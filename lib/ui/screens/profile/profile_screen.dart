@@ -12,6 +12,7 @@ import 'package:crm_admin/ui/screens/profile/about_screen.dart';
 import 'package:crm_admin/ui/screens/profile/support_screen.dart';
 import 'package:crm_admin/ui/screens/profile/help_screen.dart';
 import 'package:crm_admin/ui/screens/profile/privacy_policy_screen.dart';
+import 'package:crm_admin/ui/screens/profile/announcement_screen.dart';
 import 'package:crm_admin/ui/screens/notifications/notification_test_screen.dart';
 import 'package:crm_admin/ui/screens/notifications/notifications_screen.dart';
 
@@ -70,49 +71,49 @@ class ProfileScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 3),
+                border: Border.all(color: Colors.white, width: 2.5),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
               child: CircleAvatar(
-                radius: 50,
+                radius: 45,
                 backgroundColor: Colors.white,
                 child: Text(
                   fullName.isNotEmpty ? fullName[0].toUpperCase() : 'A',
                   style: const TextStyle(
-                    fontSize: 40,
+                    fontSize: 36,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primary,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(
               fullName,
               style: const TextStyle(
-                fontSize: 26,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               email,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 color: Colors.white.withOpacity(0.9),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               decoration: BoxDecoration(
@@ -129,7 +130,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -332,14 +333,17 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const Divider(height: 1),
-            // _buildSettingsTile(
-            //   icon: Icons.card_membership,
-            //   title: 'My Subscription',
-            //   onTap: () => Navigator.push(
-            //     context,
-            //     MaterialPageRoute(builder: (_) => const MySubscriptionScreen()),
-            //   ),
-            // ),
+            // Only show announcement for ADMIN and SUB_ADMIN
+            if (PrefManager.getRole() == 'ADMIN' ||
+                PrefManager.getRole() == 'SUB_ADMIN')
+              _buildSettingsTile(
+                icon: Icons.campaign,
+                title: 'Send Announcement',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AnnouncementScreen()),
+                ),
+              ),
             _buildSettingsTile(
               icon: Icons.notifications_active,
               title: 'Notifications',

@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class GenerateReportScreen extends StatefulWidget {
   const GenerateReportScreen({super.key});
@@ -51,7 +52,7 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
     'CONTACTED',
     'QUALIFIED',
     'CONVERTED',
-    'LOST'
+    'LOST',
   ];
 
   final List<String> _sources = [
@@ -60,7 +61,7 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
     'SOCIAL_MEDIA',
     'ADVERTISEMENT',
     'COLD_CALL',
-    'OTHER'
+    'OTHER',
   ];
 
   @override
@@ -71,7 +72,10 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Generate Report', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Generate Report',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: AppColors.primary,
       ),
       body: SingleChildScrollView(
@@ -154,7 +158,9 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
                     'Apply Filters (Optional)',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: const Text('Filter data by date, status, source, etc.'),
+                  subtitle: const Text(
+                    'Filter data by date, status, source, etc.',
+                  ),
                   value: _applyFilters,
                   activeColor: AppColors.primary,
                   onChanged: (value) {
@@ -189,9 +195,15 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
                     prefixIcon: Icon(Icons.flag),
                   ),
                   items: [
-                    const DropdownMenuItem(value: null, child: Text('All Statuses')),
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('All Statuses'),
+                    ),
                     ..._statuses.map((status) {
-                      return DropdownMenuItem(value: status, child: Text(status));
+                      return DropdownMenuItem(
+                        value: status,
+                        child: Text(status),
+                      );
                     }),
                   ],
                   onChanged: (value) {
@@ -214,9 +226,15 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
                     prefixIcon: Icon(Icons.source),
                   ),
                   items: [
-                    const DropdownMenuItem(value: null, child: Text('All Sources')),
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('All Sources'),
+                    ),
                     ..._sources.map((source) {
-                      return DropdownMenuItem(value: source, child: Text(source));
+                      return DropdownMenuItem(
+                        value: source,
+                        child: Text(source),
+                      );
                     }),
                   ],
                   onChanged: (value) {
@@ -240,7 +258,10 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
                       prefixIcon: Icon(Icons.person),
                     ),
                     items: [
-                      const DropdownMenuItem(value: null, child: Text('All Employees')),
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('All Employees'),
+                      ),
                       ...employees.map((user) {
                         return DropdownMenuItem(
                           value: user.id,
@@ -288,7 +309,9 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
                                 ? DateFormat('MMM dd, yyyy').format(_startDate!)
                                 : 'Select date',
                             style: TextStyle(
-                              color: _startDate != null ? Colors.black : Colors.grey,
+                              color: _startDate != null
+                                  ? Colors.black
+                                  : Colors.grey,
                             ),
                           ),
                         ),
@@ -323,7 +346,9 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
                                 ? DateFormat('MMM dd, yyyy').format(_endDate!)
                                 : 'Select date',
                             style: TextStyle(
-                              color: _endDate != null ? Colors.black : Colors.grey,
+                              color: _endDate != null
+                                  ? Colors.black
+                                  : Colors.grey,
                             ),
                           ),
                         ),
@@ -352,7 +377,9 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
                         )
                       : const Icon(Icons.play_arrow),
                   label: Text(
-                    reportProvider.isLoading ? 'Generating...' : 'Generate Report',
+                    reportProvider.isLoading
+                        ? 'Generating...'
+                        : 'Generate Report',
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
@@ -400,7 +427,8 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
                         Row(
                           children: [
                             Icon(
-                              reportProvider.generatedReport!.status == 'COMPLETED'
+                              reportProvider.generatedReport!.status ==
+                                      'COMPLETED'
                                   ? Icons.check_circle
                                   : Icons.pending,
                               color: AppColors.success,
@@ -436,16 +464,23 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
                           'Report Type',
                           reportProvider.generatedReport!.reportType,
                         ),
-                        _buildReportInfo('Format', reportProvider.generatedReport!.format),
+                        _buildReportInfo(
+                          'Format',
+                          reportProvider.generatedReport!.format,
+                        ),
                         if (reportProvider.generatedReport!.generatedAt != null)
                           _buildReportInfo(
                             'Generated At',
-                            _formatDateTime(reportProvider.generatedReport!.generatedAt!),
+                            _formatDateTime(
+                              reportProvider.generatedReport!.generatedAt!,
+                            ),
                           ),
                         if (reportProvider.generatedReport!.expiresAt != null)
                           _buildReportInfo(
                             'Expires At',
-                            _formatDateTime(reportProvider.generatedReport!.expiresAt!),
+                            _formatDateTime(
+                              reportProvider.generatedReport!.expiresAt!,
+                            ),
                           ),
                         const SizedBox(height: 16),
 
@@ -536,7 +571,9 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
       if (_selectedSource != null) filters['source'] = _selectedSource;
       if (_selectedEmployee != null) filters['assignedTo'] = _selectedEmployee;
       if (_startDate != null) {
-        filters['startDate'] = DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(_startDate!);
+        filters['startDate'] = DateFormat(
+          "yyyy-MM-dd'T'HH:mm:ss",
+        ).format(_startDate!);
       }
       if (_endDate != null) {
         final endOfDay = DateTime(
@@ -547,7 +584,9 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
           59,
           59,
         );
-        filters['endDate'] = DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(endOfDay);
+        filters['endDate'] = DateFormat(
+          "yyyy-MM-dd'T'HH:mm:ss",
+        ).format(endOfDay);
       }
     }
 
@@ -561,9 +600,7 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
     if (success && mounted) {
       showTopSnackBar(
         Overlay.of(context),
-        const CustomSnackBar.success(
-          message: 'Report generated successfully!',
-        ),
+        const CustomSnackBar.success(message: 'Report generated successfully!'),
       );
     }
   }
@@ -571,8 +608,11 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
   Future<void> _downloadReport(String url) async {
     try {
       // Replace localhost with production domain
-      final fixedUrl = url.replaceAll('http://localhost:8080', 'https://api.rudraashwicrm.com');
-      
+      final fixedUrl = url.replaceAll(
+        'http://localhost:8080',
+        'https://api.rudraashwicrm.com',
+      );
+
       // Show downloading dialog
       if (mounted) {
         showDialog(
@@ -590,40 +630,40 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
         );
       }
 
-      // Request storage permission
+      // Request storage permission only for Android 10-12 (API 29-32)
+      // Android 13+ doesn't need permission for app-specific downloads
       if (Platform.isAndroid) {
-        PermissionStatus status = await Permission.storage.status;
-        
-        // If permission is not granted, request it
-        if (!status.isGranted) {
-          status = await Permission.storage.request();
-        }
-        
-        // If still not granted, try manageExternalStorage for Android 11+
-        if (!status.isGranted) {
-          status = await Permission.manageExternalStorage.status;
+        final androidInfo = await DeviceInfoPlugin().androidInfo;
+        final sdkInt = androidInfo.version.sdkInt;
+
+        // Only request permission for Android 10, 11, 12 (SDK 29-32)
+        if (sdkInt >= 29 && sdkInt <= 32) {
+          PermissionStatus status = await Permission.storage.status;
+
           if (!status.isGranted) {
-            status = await Permission.manageExternalStorage.request();
+            status = await Permission.storage.request();
           }
-        }
-        
-        // If neither permission is granted, show error
-        if (!status.isGranted) {
-          if (mounted) {
-            Navigator.of(context).pop(); // Close progress dialog
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Storage permission is required to download files'),
-                backgroundColor: AppColors.error,
-                action: SnackBarAction(
-                  label: 'Settings',
-                  textColor: Colors.white,
-                  onPressed: () => openAppSettings(),
+
+          // If permission denied, show error
+          if (!status.isGranted) {
+            if (mounted) {
+              Navigator.of(context).pop(); // Close progress dialog
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text(
+                    'Storage permission is required to download files',
+                  ),
+                  backgroundColor: AppColors.error,
+                  action: SnackBarAction(
+                    label: 'Settings',
+                    textColor: Colors.white,
+                    onPressed: () => openAppSettings(),
+                  ),
                 ),
-              ),
-            );
+              );
+            }
+            return;
           }
-          return;
         }
       }
 
@@ -659,7 +699,7 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
 
       if (mounted) {
         Navigator.of(context).pop(); // Close progress dialog
-        
+
         // Show success dialog with file location and action to open
         showDialog(
           context: context,
@@ -668,7 +708,7 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
               children: const [
                 Icon(Icons.check_circle, color: AppColors.success, size: 24),
                 SizedBox(width: 8),
-                Text('Download Complete', style:TextStyle(fontSize: 18)),
+                Text('Download Complete', style: TextStyle(fontSize: 18)),
               ],
             ),
             content: Column(
@@ -677,10 +717,7 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
               children: [
                 const Text(
                   'Report downloaded successfully!',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -697,7 +734,11 @@ class _GenerateReportScreenState extends State<GenerateReportScreen> {
                     children: [
                       Row(
                         children: const [
-                          Icon(Icons.folder_outlined, size: 20, color: AppColors.success),
+                          Icon(
+                            Icons.folder_outlined,
+                            size: 20,
+                            color: AppColors.success,
+                          ),
                           SizedBox(width: 8),
                           Text(
                             'File Location:',

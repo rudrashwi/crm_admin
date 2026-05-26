@@ -140,327 +140,353 @@ class _UserRegistrationScreenState extends State<UserRegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Add User/Sub-Admin')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Create New User',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text('Add employees or sub-admins to your team'),
-              const SizedBox(height: 32),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CustomTextField(
-                    label: 'Username',
-                    hint: 'Enter username (letters, numbers and _ only)',
-                    controller: _usernameController,
-                    validator: (v) {
-                      if (v!.isEmpty) return 'Required';
-                      if (v.length < 3) return 'Minimum 3 characters';
-                      if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(v))
-                        return 'Only letters, numbers and underscore allowed';
-                      if (_isUsernameAvailable != true)
-                        return 'Username not available';
-                      return null;
-                    },
-                    suffixIcon: _isCheckingUsername
-                        ? const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        : _isUsernameAvailable == true
-                        ? const Icon(
-                            Icons.check_circle,
-                            color: AppColors.success,
-                            size: 24,
-                          )
-                        : _isUsernameAvailable == false
-                        ? const Icon(
-                            Icons.cancel,
-                            color: AppColors.error,
-                            size: 24,
-                          )
-                        : null,
-                  ),
-                  if (_usernameMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, left: 4),
-                      child: Row(
-                        children: [
-                          if (_isUsernameAvailable == true)
-                            const Icon(
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          // Clear form when going back
+          _usernameController.clear();
+          _emailController.clear();
+          _fullNameController.clear();
+          _mobileNumberController.clear();
+          _passwordController.clear();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Add User/Sub-Admin')),
+        body: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: 24 + MediaQuery.of(context).padding.bottom,
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Create New User',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text('Add employees or sub-admins to your team'),
+                const SizedBox(height: 32),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomTextField(
+                      label: 'Username',
+                      hint: 'Enter username (letters, numbers and _ only)',
+                      controller: _usernameController,
+                      validator: (v) {
+                        if (v!.isEmpty) return 'Required';
+                        if (v.length < 3) return 'Minimum 3 characters';
+                        if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(v))
+                          return 'Only letters, numbers and underscore allowed';
+                        if (_isUsernameAvailable != true)
+                          return 'Username not available';
+                        return null;
+                      },
+                      suffixIcon: _isCheckingUsername
+                          ? const Padding(
+                              padding: EdgeInsets.all(12),
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            )
+                          : _isUsernameAvailable == true
+                          ? const Icon(
                               Icons.check_circle,
                               color: AppColors.success,
-                              size: 16,
+                              size: 24,
                             )
-                          else if (_isUsernameAvailable == false)
-                            const Icon(
+                          : _isUsernameAvailable == false
+                          ? const Icon(
                               Icons.cancel,
                               color: AppColors.error,
-                              size: 16,
+                              size: 24,
                             )
-                          else if (_isCheckingUsername)
-                            const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              _usernameMessage!,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: _isCheckingUsername
-                                    ? AppColors.textSecondary
-                                    : _isUsernameAvailable == true
-                                    ? AppColors.success
-                                    : AppColors.error,
+                          : null,
+                    ),
+                    if (_usernameMessage != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, left: 4),
+                        child: Row(
+                          children: [
+                            if (_isUsernameAvailable == true)
+                              const Icon(
+                                Icons.check_circle,
+                                color: AppColors.success,
+                                size: 16,
+                              )
+                            else if (_isUsernameAvailable == false)
+                              const Icon(
+                                Icons.cancel,
+                                color: AppColors.error,
+                                size: 16,
+                              )
+                            else if (_isCheckingUsername)
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                _usernameMessage!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: _isCheckingUsername
+                                      ? AppColors.textSecondary
+                                      : _isUsernameAvailable == true
+                                      ? AppColors.success
+                                      : AppColors.error,
+                                ),
                               ),
                             ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                CustomTextField(
+                  label: 'Full Name',
+                  hint: 'Enter full name',
+                  controller: _fullNameController,
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 20),
+                CustomTextField(
+                  label: 'Email (Optional)',
+                  hint: 'Enter email',
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) {
+                    if (v != null && v.isNotEmpty) {
+                      if (!RegExp(
+                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                      ).hasMatch(v))
+                        return 'Enter valid email';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                CustomTextField(
+                  label: 'Mobile Number',
+                  hint: 'Enter 10-digit mobile number',
+                  controller: _mobileNumberController,
+                  keyboardType: TextInputType.phone,
+                  maxLength: 10,
+                  validator: (v) {
+                    if (v!.isEmpty) return 'Required';
+                    if (v.length != 10) return 'Must be exactly 10 digits';
+                    if (!RegExp(r'^[0-9]{10}$').hasMatch(v))
+                      return 'Only numbers allowed';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Role',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: _selectedRole,
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  items: _isAdmin
+                      ? const [
+                          DropdownMenuItem(
+                            value: 'EMPLOYEE',
+                            child: Text('Employee'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'SUB_ADMIN',
+                            child: Text('Sub-Admin'),
+                          ),
+                        ]
+                      : const [
+                          DropdownMenuItem(
+                            value: 'EMPLOYEE',
+                            child: Text('Employee'),
                           ),
                         ],
-                      ),
+                  onChanged: (v) => setState(() => _selectedRole = v!),
+                ),
+                if (!_isAdmin)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8, left: 4),
+                    child: Text(
+                      'ℹ️ Sub-admins can only create employee accounts',
+                      style: TextStyle(fontSize: 12, color: AppColors.info),
                     ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                label: 'Full Name',
-                hint: 'Enter full name',
-                controller: _fullNameController,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                label: 'Email',
-                hint: 'Enter email',
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                validator: (v) {
-                  if (v!.isEmpty) return 'Required';
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v))
-                    return 'Enter valid email';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                label: 'Mobile Number',
-                hint: 'Enter 10-digit mobile number',
-                controller: _mobileNumberController,
-                keyboardType: TextInputType.phone,
-                maxLength: 10,
-                validator: (v) {
-                  if (v!.isEmpty) return 'Required';
-                  if (v.length != 10) return 'Must be exactly 10 digits';
-                  if (!RegExp(r'^[0-9]{10}$').hasMatch(v))
-                    return 'Only numbers allowed';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Role',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedRole,
-                decoration: const InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                ),
-                items: _isAdmin
-                    ? const [
-                        DropdownMenuItem(
-                          value: 'EMPLOYEE',
-                          child: Text('Employee'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'SUB_ADMIN',
-                          child: Text('Sub-Admin'),
-                        ),
-                      ]
-                    : const [
-                        DropdownMenuItem(
-                          value: 'EMPLOYEE',
-                          child: Text('Employee'),
-                        ),
-                      ],
-                onChanged: (v) => setState(() => _selectedRole = v!),
-              ),
-              if (!_isAdmin)
-                const Padding(
-                  padding: EdgeInsets.only(top: 8, left: 4),
-                  child: Text(
-                    'ℹ️ Sub-admins can only create employee accounts',
-                    style: TextStyle(fontSize: 12, color: AppColors.info),
                   ),
+                const SizedBox(height: 20),
+                CustomTextField(
+                  label: 'Password',
+                  hint: 'Enter password (min 8 characters)',
+                  controller: _passwordController,
+                  isPassword: true,
+                  validator: (v) =>
+                      v!.length < 8 ? 'Minimum 8 characters required' : null,
                 ),
-              const SizedBox(height: 20),
-              CustomTextField(
-                label: 'Password',
-                hint: 'Enter password (min 8 characters)',
-                controller: _passwordController,
-                isPassword: true,
-                validator: (v) =>
-                    v!.length < 8 ? 'Minimum 8 characters required' : null,
-              ),
-              const SizedBox(height: 40),
-              Consumer<UserProvider>(
-                builder: (context, userProvider, _) {
-                  return CustomButton(
-                    text: 'CREATE USER',
-                    isLoading: userProvider.isLoading,
-                    onPressed: () async {
-                      // Check if username is verified
-                      if (_isUsernameAvailable != true) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please verify username first'),
-                            backgroundColor: AppColors.warning,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                        return;
-                      }
-
-                      if (_formKey.currentState!.validate()) {
-                        // Check subscription limits before creating user
-                        final userId = PrefManager.getUserId();
-                        if (userId == null) {
+                const SizedBox(height: 40),
+                Consumer<UserProvider>(
+                  builder: (context, userProvider, _) {
+                    return CustomButton(
+                      text: 'CREATE USER',
+                      isLoading: userProvider.isLoading,
+                      onPressed: () async {
+                        // Check if username is verified
+                        if (_isUsernameAvailable != true) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('User ID not found'),
-                              backgroundColor: AppColors.error,
+                              content: Text('Please verify username first'),
+                              backgroundColor: AppColors.warning,
+                              behavior: SnackBarBehavior.floating,
                             ),
                           );
                           return;
                         }
 
-                        final subscriptionProvider = context
-                            .read<SubscriptionProvider>();
-                        await subscriptionProvider.fetchUserSubscription(
-                          userId,
-                        );
-
-                        final subscription = subscriptionProvider.subscription;
-                        if (subscription == null || subscription.expired) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'No active subscription found. Please subscribe first.',
+                        if (_formKey.currentState!.validate()) {
+                          // Check subscription limits before creating user
+                          final userId = PrefManager.getUserId();
+                          if (userId == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('User ID not found'),
+                                backgroundColor: AppColors.error,
                               ),
-                              backgroundColor: AppColors.error,
-                              behavior: SnackBarBehavior.floating,
-                              duration: Duration(seconds: 4),
-                            ),
-                          );
-                          return;
-                        }
+                            );
+                            return;
+                          }
 
-                        // Check limits based on role
-                        final remaining = subscription.remaining;
-                        if (remaining == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Unable to verify subscription limits',
+                          final subscriptionProvider = context
+                              .read<SubscriptionProvider>();
+                          await subscriptionProvider.fetchUserSubscription(
+                            userId,
+                          );
+
+                          final subscription =
+                              subscriptionProvider.subscription;
+                          if (subscription == null || subscription.expired) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'No active subscription found. Please subscribe first.',
+                                ),
+                                backgroundColor: AppColors.error,
+                                behavior: SnackBarBehavior.floating,
+                                duration: Duration(seconds: 4),
                               ),
-                              backgroundColor: AppColors.error,
-                            ),
-                          );
-                          return;
-                        }
+                            );
+                            return;
+                          }
 
-                        if (_selectedRole == 'SUB_ADMIN' &&
-                            remaining.subAdmins <= 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Sub-Admin limit reached! You have ${subscription.usage?.subAdmins ?? 0}/${subscription.limits?.subAdmins ?? 0} sub-admins. Please upgrade your subscription.',
+                          // Check limits based on role
+                          final remaining = subscription.remaining;
+                          if (remaining == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Unable to verify subscription limits',
+                                ),
+                                backgroundColor: AppColors.error,
                               ),
-                              backgroundColor: AppColors.error,
-                              behavior: SnackBarBehavior.floating,
-                              duration: const Duration(seconds: 5),
-                            ),
-                          );
-                          return;
-                        }
+                            );
+                            return;
+                          }
 
-                        if (_selectedRole == 'EMPLOYEE' &&
-                            remaining.employees <= 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Employee limit reached! You have ${subscription.usage?.employees ?? 0}/${subscription.limits?.employees ?? 0} employees. Please upgrade your subscription.',
+                          if (_selectedRole == 'SUB_ADMIN' &&
+                              remaining.subAdmins <= 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Sub-Admin limit reached! You have ${subscription.usage?.subAdmins ?? 0}/${subscription.limits?.subAdmins ?? 0} sub-admins. Please upgrade your subscription.',
+                                ),
+                                backgroundColor: AppColors.error,
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 5),
                               ),
-                              backgroundColor: AppColors.error,
-                              behavior: SnackBarBehavior.floating,
-                              duration: const Duration(seconds: 5),
-                            ),
-                          );
-                          return;
-                        }
+                            );
+                            return;
+                          }
 
-                        // All validations passed, create user
-                        final success = await userProvider.createUser(
-                          username: _usernameController.text,
-                          email: _emailController.text,
-                          fullName: _fullNameController.text,
-                          mobileNumber: _mobileNumberController.text,
-                          password: _passwordController.text,
-                          role: _selectedRole,
-                        );
-                        if (success && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('User created successfully!'),
-                              backgroundColor: AppColors.success,
-                              behavior: SnackBarBehavior.floating,
-                            ),
+                          if (_selectedRole == 'EMPLOYEE' &&
+                              remaining.employees <= 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Employee limit reached! You have ${subscription.usage?.employees ?? 0}/${subscription.limits?.employees ?? 0} employees. Please upgrade your subscription.',
+                                ),
+                                backgroundColor: AppColors.error,
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 5),
+                              ),
+                            );
+                            return;
+                          }
+
+                          // All validations passed, create user
+                          final success = await userProvider.createUser(
+                            username: _usernameController.text,
+                            email: _emailController.text,
+                            fullName: _fullNameController.text,
+                            mobileNumber: _mobileNumberController.text,
+                            password: _passwordController.text,
+                            role: _selectedRole,
                           );
-                          // Clear the form after successful creation
-                          _formKey.currentState!.reset();
-                          _usernameController.clear();
-                          _emailController.clear();
-                          _fullNameController.clear();
-                          _mobileNumberController.clear();
-                          _passwordController.clear();
-                          setState(() {
-                            _selectedRole = 'EMPLOYEE';
-                            _isUsernameAvailable = null;
-                            _usernameMessage = '';
-                          });
-                        } else if (userProvider.error != null && mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(userProvider.error!),
-                              backgroundColor: AppColors.error,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                          if (success && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('User created successfully!'),
+                                backgroundColor: AppColors.success,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                            // Clear the form after successful creation
+                            _formKey.currentState!.reset();
+                            _usernameController.clear();
+                            _emailController.clear();
+                            _fullNameController.clear();
+                            _mobileNumberController.clear();
+                            _passwordController.clear();
+                            setState(() {
+                              _selectedRole = 'EMPLOYEE';
+                              _isUsernameAvailable = null;
+                              _usernameMessage = '';
+                            });
+                          } else if (userProvider.error != null && mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(userProvider.error!),
+                                backgroundColor: AppColors.error,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
                         }
-                      }
-                    },
-                  );
-                },
-              ),
-            ],
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),

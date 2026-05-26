@@ -12,6 +12,8 @@ import 'package:crm_admin/ui/screens/user_management/view_users_screen.dart';
 import 'package:crm_admin/ui/screens/leads/view_leads_screen.dart';
 import 'package:crm_admin/ui/screens/reports/generate_report_screen.dart';
 import 'package:crm_admin/ui/screens/notifications/notifications_screen.dart';
+import 'package:crm_admin/ui/screens/dashboard/missed_followups_screen.dart';
+import 'package:crm_admin/ui/screens/dashboard/untouched_leads_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -151,8 +153,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         : 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
                     childAspectRatio: 2.0,
                     children: [
                       StatsCard(
@@ -170,8 +172,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       StatsCard(
                         title: PrefManager.getRole() == 'SUB_ADMIN'
                             ? 'Admin Employees'
-                            : 'Employees',
-                        value: stats.totalEmployees.toString(),
+                            : 'Employees & Sub-admins',
+                        value:
+                            (PrefManager.getRole() == 'ADMIN'
+                                    ? stats.totalEmployees - 1
+                                    : stats.totalEmployees)
+                                .toString(),
                         icon: Icons.people,
                         color: AppColors.info,
                         onTap: () => Navigator.push(
@@ -193,6 +199,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       ),
+                      // Missed Follow-ups Card
+                      if (stats.missedFollowUps > 0)
+                        StatsCard(
+                          title: 'Missed Follow-ups',
+                          value: stats.missedFollowUps.toString(),
+                          icon: Icons.warning_amber_rounded,
+                          color: Colors.red,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const MissedFollowupsScreen(),
+                            ),
+                          ),
+                        ),
+                      // Untouched Leads Card
+                      if (stats.untouchedLeads > 0)
+                        StatsCard(
+                          title: 'Untouched Leads',
+                          value: stats.untouchedLeads.toString(),
+                          icon: Icons.timer_off_rounded,
+                          color: Colors.orange,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const UntouchedLeadsScreen(),
+                            ),
+                          ),
+                        ),
                       // Show Reports only for ADMIN
                       if (PrefManager.getRole() == 'ADMIN')
                         StatsCard(

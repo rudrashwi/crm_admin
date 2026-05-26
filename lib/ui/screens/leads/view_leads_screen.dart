@@ -144,7 +144,12 @@ class _ViewLeadsScreenState extends State<ViewLeadsScreen> {
               else
                 Expanded(
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      0,
+                      16,
+                      16 + MediaQuery.of(context).viewPadding.bottom,
+                    ),
                     itemCount: leads.length,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 12),
@@ -156,12 +161,18 @@ class _ViewLeadsScreenState extends State<ViewLeadsScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: InkWell(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => LeadDetailScreen(leadId: lead.id),
-                            ),
-                          ),
+                          onTap: () async {
+                            final deleted = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => LeadDetailScreen(leadId: lead.id),
+                              ),
+                            );
+                            if (deleted == true && context.mounted) {
+                              // Refresh leads list after delete
+                              context.read<LeadsProvider>().fetchLeads();
+                            }
+                          },
                           borderRadius: BorderRadius.circular(12),
                           child: Padding(
                             padding: const EdgeInsets.all(16),
@@ -258,12 +269,14 @@ class _ViewLeadsScreenState extends State<ViewLeadsScreen> {
   void _showLeadOptions(BuildContext context, dynamic lead) {
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
+      builder: (context) => SafeArea(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Header
@@ -306,14 +319,18 @@ class _ViewLeadsScreenState extends State<ViewLeadsScreen> {
             ListTile(
               leading: const Icon(Icons.info_outline, color: AppColors.primary),
               title: const Text('View Details'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                Navigator.push(
+                final deleted = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => LeadDetailScreen(leadId: lead.id),
                   ),
                 );
+                if (deleted == true && context.mounted) {
+                  // Refresh leads list after delete
+                  context.read<LeadsProvider>().fetchLeads();
+                }
               },
             ),
             ListTile(
@@ -369,6 +386,7 @@ class _ViewLeadsScreenState extends State<ViewLeadsScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

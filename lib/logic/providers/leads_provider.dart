@@ -92,10 +92,31 @@ class LeadsProvider extends ChangeNotifier {
 
   Future<bool> unassignLead(String leadId) async {
     try {
+      print('🔄 [LeadsProvider] Starting unassign lead: $leadId');
       await _repository.unassignLead(leadId);
+      print('✅ [LeadsProvider] Lead unassigned successfully');
       await fetchLeads();
       return true;
     } catch (e) {
+      print('❌ [LeadsProvider] Error unassigning lead: $e');
+      _error = e.toString();
+      return false;
+    }
+  }
+
+  Future<bool> transferLead(String leadId, String newEmployeeId) async {
+    try {
+      print('🔄 [LeadsProvider] Starting transfer lead');
+      print('   Lead ID: $leadId');
+      print('   New Employee ID: $newEmployeeId');
+      
+      await _repository.transferLead(leadId, newEmployeeId);
+      
+      print('✅ [LeadsProvider] Lead transferred successfully');
+      await fetchLeads();
+      return true;
+    } catch (e) {
+      print('❌ [LeadsProvider] Error transferring lead: $e');
       _error = e.toString();
       return false;
     }

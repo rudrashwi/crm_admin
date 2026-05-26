@@ -151,4 +151,98 @@ class NotificationProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  /// Delete a single notification
+  Future<bool> deleteNotification(String notificationId) async {
+    try {
+      log('[NOTIF_PROVIDER] Deleting notification...');
+      log('[NOTIF_PROVIDER] Notification ID: $notificationId');
+
+      final success = await _repository.deleteNotification(notificationId);
+      
+      if (success) {
+        log('[NOTIF_PROVIDER] Successfully deleted notification in backend');
+        
+        // Remove from local state
+        _notifications.removeWhere((n) => n.id == notificationId);
+        
+        log('[NOTIF_PROVIDER] Updated notification stats:');
+        log('[NOTIF_PROVIDER] - Total: $totalCount');
+        log('[NOTIF_PROVIDER] - Unread: $unreadCount');
+        log('[NOTIF_PROVIDER] - Read: $readCount');
+        
+        notifyListeners();
+        return true;
+      } else {
+        log('[NOTIF_PROVIDER] Failed to delete notification in backend');
+        return false;
+      }
+    } catch (e, stackTrace) {
+      log('[NOTIF_PROVIDER] ERROR deleting notification: $e');
+      log('[NOTIF_PROVIDER] Stack trace: $stackTrace');
+      return false;
+    }
+  }
+
+  /// Delete multiple notifications
+  Future<bool> deleteBatchNotifications(List<String> notificationIds) async {
+    try {
+      log('[NOTIF_PROVIDER] Deleting batch notifications...');
+      log('[NOTIF_PROVIDER] Count: ${notificationIds.length}');
+
+      final success = await _repository.deleteBatchNotifications(notificationIds);
+      
+      if (success) {
+        log('[NOTIF_PROVIDER] Successfully deleted batch notifications in backend');
+        
+        // Remove from local state
+        _notifications.removeWhere((n) => notificationIds.contains(n.id));
+        
+        log('[NOTIF_PROVIDER] Updated notification stats:');
+        log('[NOTIF_PROVIDER] - Total: $totalCount');
+        log('[NOTIF_PROVIDER] - Unread: $unreadCount');
+        log('[NOTIF_PROVIDER] - Read: $readCount');
+        
+        notifyListeners();
+        return true;
+      } else {
+        log('[NOTIF_PROVIDER] Failed to delete batch notifications in backend');
+        return false;
+      }
+    } catch (e, stackTrace) {
+      log('[NOTIF_PROVIDER] ERROR deleting batch notifications: $e');
+      log('[NOTIF_PROVIDER] Stack trace: $stackTrace');
+      return false;
+    }
+  }
+
+  /// Delete all notifications
+  Future<bool> deleteAllNotifications() async {
+    try {
+      log('[NOTIF_PROVIDER] Deleting all notifications...');
+      log('[NOTIF_PROVIDER] Current count: $totalCount');
+
+      final success = await _repository.deleteAllNotifications();
+      
+      if (success) {
+        log('[NOTIF_PROVIDER] Successfully deleted all notifications in backend');
+        
+        // Clear local state
+        _notifications.clear();
+        
+        log('[NOTIF_PROVIDER] All notifications cleared from local state');
+        log('[NOTIF_PROVIDER] Total count: $totalCount');
+        
+        notifyListeners();
+        return true;
+      } else {
+        log('[NOTIF_PROVIDER] Failed to delete all notifications in backend');
+        return false;
+      }
+    } catch (e, stackTrace) {
+      log('[NOTIF_PROVIDER] ERROR deleting all notifications: $e');
+      log('[NOTIF_PROVIDER] Stack trace: $stackTrace');
+      return false;
+    }
+  }
 }

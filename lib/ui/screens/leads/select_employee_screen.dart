@@ -113,7 +113,12 @@ class _SelectEmployeeScreenState extends State<SelectEmployeeScreen> {
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              16 + MediaQuery.of(context).viewPadding.bottom,
+            ),
             itemCount: employees.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) => _buildEmployeeCard(employees[index]),

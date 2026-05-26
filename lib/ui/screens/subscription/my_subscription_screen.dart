@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:crm_admin/core/constants/app_colors.dart';
 import 'package:crm_admin/core/utils/pref_manager.dart';
 import 'package:crm_admin/logic/providers/subscription_provider.dart';
+import 'package:crm_admin/ui/screens/subscription/pending_renewal_requests_screen.dart';
 
 class MySubscriptionScreen extends StatefulWidget {
   const MySubscriptionScreen({super.key});
@@ -38,6 +39,18 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
       appBar: AppBar(
         title: const Text('My Subscription'),
         actions: [
+          // IconButton(
+          //   icon: const Icon(Icons.admin_panel_settings),
+          //   tooltip: 'Pending Renewals',
+          //   onPressed: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (_) => const PendingRenewalRequestsScreen(),
+          //       ),
+          //     );
+          //   },
+          // ),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh),
         ],
       ),
@@ -117,6 +130,8 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
                   _buildUsageCard(subscription),
                   const SizedBox(height: 16),
                   _buildUpdateSubscriptionButton(context),
+                  const SizedBox(height: 12),
+                  _buildRenewalSubscriptionButton(context),
                   const SizedBox(height: 16),
                   _buildMyRequestsSection(),
                 ],
@@ -134,7 +149,7 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isExpired
@@ -230,8 +245,26 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
           ),
           const SizedBox(height: 16),
           const Divider(height: 1),
-          // const SizedBox(height: 16),
-          // _buildInfoRow('Plan Name', subscription.planName ?? 'N/A', Icons.card_membership),
+          const SizedBox(height: 12),
+          _buildInfoRow(
+            'Plan Name',
+            subscription.planName ?? 'N/A',
+            Icons.card_membership,
+          ),
+          const SizedBox(height: 12),
+          // _buildInfoRow(
+          //   'Subscription ID',
+          //   subscription.subscriptionId ?? 'N/A',
+          //   Icons.fingerprint,
+          // ),
+          // const SizedBox(height: 12),
+          _buildInfoRow(
+            'Plan Type',
+            subscription.isTrial ? 'Trial' : 'Paid',
+            Icons.label,
+          ),
+          const SizedBox(height: 12),
+          _buildInfoRow('Status', subscription.status, Icons.info_outline),
           const SizedBox(height: 12),
           _buildInfoRow(
             'Start Date',
@@ -334,15 +367,15 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
                   AppColors.warning,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildLimitTile(
-                  'Leads',
-                  limits.leads ?? 0,
-                  Icons.contacts,
-                  AppColors.info,
-                ),
-              ),
+              // const SizedBox(width: 8),
+              // Expanded(
+              //   child: _buildLimitTile(
+              //     'Leads',
+              //     limits.leads ?? 0,
+              //     Icons.contacts,
+              //     AppColors.info,
+              //   ),
+              // ),
             ],
           ),
           // const SizedBox(height: 12),
@@ -416,13 +449,13 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
             limits.subAdmins ?? 0,
             AppColors.warning,
           ),
-          const SizedBox(height: 16),
-          _buildUsageBar(
-            'Leads',
-            usage.leads ?? 0,
-            limits.leads ?? 0,
-            AppColors.info,
-          ),
+          // const SizedBox(height: 16),
+          // _buildUsageBar(
+          //   'Leads',
+          //   usage.leads ?? 0,
+          //   limits.leads ?? 0,
+          //   AppColors.info,
+          // ),
         ],
       ),
     );
@@ -542,7 +575,26 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRenewalSubscriptionButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () => _showRenewalSubscriptionDialog(context),
+        icon: const Icon(Icons.autorenew),
+        label: const Text('Renew Subscription'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.accent,
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          side: const BorderSide(color: AppColors.accent, width: 2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -755,7 +807,24 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Update Subscription'),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Row(
+                children: [
+                  const Text(
+                    'Update Subscription',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    icon: const Icon(Icons.close, color: Colors.red),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -790,17 +859,47 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       value: selectedDuration,
+                      isExpanded: true,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.calendar_month),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                       ),
                       items: const [
                         DropdownMenuItem(
                           value: '1 Month',
-                          child: Text('1 Month (30 days)'),
+                          child: Text(
+                            '1 Month (30 days)',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: '2 Months',
+                          child: Text(
+                            '2 Months (60 days)',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: '3 Months',
+                          child: Text(
+                            '3 Months (90 days)',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: '6 Months',
+                          child: Text(
+                            '6 Months (180 days)',
+                            style: TextStyle(fontSize: 14),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: '1 Year',
-                          child: Text('1 Year (365 days)'),
+                          child: Text('1 Year (365 days)', style: TextStyle(fontSize: 14)),
                         ),
                       ],
                       onChanged: (value) {
@@ -813,19 +912,35 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
                 ),
               ),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
-                ),
+                // TextButton(
+                //   onPressed: () => Navigator.pop(dialogContext),
+                //   child: const Text('Cancel'),
+                // ),
                 ElevatedButton(
                   onPressed: () async {
                     final numSubAdmins =
                         int.tryParse(subAdminsController.text) ?? 0;
                     final numEmployees =
                         int.tryParse(employeesController.text) ?? 0;
-                    final durationDays = selectedDuration == '1 Year'
-                        ? 365
-                        : 30;
+
+                    // Convert selected duration to days
+                    int durationDays;
+                    switch (selectedDuration) {
+                      case '2 Months':
+                        durationDays = 60;
+                        break;
+                      case '3 Months':
+                        durationDays = 90;
+                        break;
+                      case '6 Months':
+                        durationDays = 180;
+                        break;
+                      case '1 Year':
+                        durationDays = 365;
+                        break;
+                      default: // '1 Month'
+                        durationDays = 30;
+                    }
 
                     if (numEmployees <= 0) {
                       ScaffoldMessenger.of(parentContext).showSnackBar(
@@ -853,6 +968,170 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
                     );
                   },
                   child: const Text('Get Estimate'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showRenewalSubscriptionDialog(BuildContext context) {
+    final parentContext = context;
+    final provider = context.read<SubscriptionProvider>();
+    final subscription = provider.subscription;
+
+    // Get current subscription limits or default to 0
+    final currentSubAdmins = subscription?.limits?.subAdmins ?? 0;
+    final currentEmployees = subscription?.limits?.employees ?? 0;
+
+    String selectedDuration = '1 Month'; // Default to 1 month
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Row(
+                children: [
+                  const Text(
+                    'Renew Subscription',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    icon: const Icon(Icons.close, color: Colors.red),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Renew your subscription with the same configuration:',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Sub-Admins: $currentSubAdmins',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    Text(
+                      'Employees: $currentEmployees',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Subscription Duration',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: selectedDuration,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.calendar_month),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: '1 Month',
+                          child: Text(
+                            '1 Month (30 days)',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: '2 Months',
+                          child: Text(
+                            '2 Months (60 days)',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: '3 Months',
+                          child: Text(
+                            '3 Months (90 days)',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: '6 Months',
+                          child: Text(
+                            '6 Months (180 days)',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: '1 Year',
+                          child: Text('1 Year (365 days)', style: TextStyle(fontSize: 14)),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          selectedDuration = value ?? '1 Month';
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () async {
+                    // Convert selected duration to days
+                    int durationDays;
+                    switch (selectedDuration) {
+                      case '2 Months':
+                        durationDays = 60;
+                        break;
+                      case '3 Months':
+                        durationDays = 90;
+                        break;
+                      case '6 Months':
+                        durationDays = 180;
+                        break;
+                      case '1 Year':
+                        durationDays = 365;
+                        break;
+                      default: // '1 Month'
+                        durationDays = 30;
+                    }
+
+                    Navigator.pop(dialogContext);
+                    _submitRenewalRequest(
+                      parentContext,
+                      currentSubAdmins,
+                      currentEmployees,
+                      durationDays,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Submit Renewal'),
                 ),
               ],
             );
@@ -904,23 +1183,46 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
         final estimate = provider.estimate;
         if (estimate == null) {
           return AlertDialog(
-            title: const Text('Error'),
+            title: Row(
+              children: [
+                const Text('Error'),
+                const Spacer(),
+                IconButton(
+                  onPressed: () {
+                    try {
+                      Navigator.pop(dialogContext);
+                    } catch (_) {}
+                  },
+                  icon: const Icon(Icons.close, color: Colors.red),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
             content: const Text('Failed to load estimate'),
-            actions: [
-              TextButton(
+          );
+        }
+
+        return AlertDialog(
+          title: Row(
+            children: [
+              const Text(
+                'Subscription Estimate',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
+              ),
+              const Spacer(),
+              IconButton(
                 onPressed: () {
                   try {
                     Navigator.pop(dialogContext);
                   } catch (_) {}
                 },
-                child: const Text('OK'),
+                icon: const Icon(Icons.close, color: Colors.red),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
             ],
-          );
-        }
-
-        return AlertDialog(
-          title: const Text('Subscription Estimate'),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -955,14 +1257,14 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                try {
-                  Navigator.pop(dialogContext);
-                } catch (_) {}
-              },
-              child: const Text('Cancel'),
-            ),
+            // TextButton(
+            //   onPressed: () {
+            //     try {
+            //       Navigator.pop(dialogContext);
+            //     } catch (_) {}
+            //   },
+            //   child: const Text('Cancel'),
+            // ),
             ElevatedButton(
               onPressed: () async {
                 try {
@@ -1027,6 +1329,57 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
         SnackBar(
           content: Text(
             'Error: ${provider.error ?? "Failed to submit request"}',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _submitRenewalRequest(
+    BuildContext context,
+    int numSubAdmins,
+    int numEmployees,
+    int durationDays,
+  ) async {
+    final provider = context.read<SubscriptionProvider>();
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final success = await provider.requestRenewal(
+      numSubAdmins: numSubAdmins,
+      numEmployees: numEmployees,
+      subscriptionDurationDays: durationDays,
+    );
+
+    if (!mounted) return;
+    try {
+      Navigator.of(context).pop(); // Close loading
+    } catch (_) {}
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Subscription renewal request submitted successfully!'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      // Refresh subscription and requests
+      final userId = PrefManager.getUserId();
+      if (userId != null && userId.isNotEmpty) {
+        provider.fetchUserSubscription(userId);
+      }
+      provider.fetchMyRequests();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Error: ${provider.error ?? "Failed to submit renewal request"}',
           ),
           backgroundColor: AppColors.error,
         ),

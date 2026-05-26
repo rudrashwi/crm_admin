@@ -1,10 +1,11 @@
 class ApiEndpoints {
-  static const String baseUrl = 'http://13.232.29.190:8080';
+  static const String baseUrl = 'https://api.rudraashwicrm.com';
 
   // Auth
   static const String registerAdmin = '/auth/admin/register';
   static const String login = '/auth/login';
   static const String checkUsername = '/public/username/check';
+  static const String profile = '/auth/profile';
 
   // Users
   static const String createUser = '/users/create';
@@ -24,6 +25,7 @@ class ApiEndpoints {
   static String assignLead(String leadId, String userId) =>
       '/assignments/assign/$leadId/to/$userId';
   static String unassignLead(String leadId) => '/assignments/unassign/$leadId';
+  static String transferLead(String leadId) => '/leads/$leadId/transfer';
   static const String batchAssignLeads = '/assignments/batch';
   static const String validateLeadsExcel = '/leads/validate';
   static const String uploadLeadsExcel = '/leads/upload';
@@ -36,6 +38,9 @@ class ApiEndpoints {
   static const String myNotifications = '/notifications/my';
   static String markNotificationRead(String notificationId) =>
       '/notifications/$notificationId/read';
+  static String deleteNotification(String notificationId) =>
+      '/notifications/$notificationId';
+  static const String deleteBatchNotifications = '/notifications/batch';
 
   // Reports
   static const String generateReport = '/reports/generate';
@@ -48,6 +53,14 @@ class ApiEndpoints {
   static String employeeDetails(String employeeId) =>
       '/analytics/employee/$employeeId';
 
+  // Permissions
+  static String getUserPermissions(String userId) =>
+      '/users/$userId/permissions';
+  static String grantLeadCreationPermission(String userId) =>
+      '/users/$userId/permissions/grant-lead-creation';
+  static String revokeLeadCreationPermission(String userId) =>
+      '/users/$userId/permissions/revoke-lead-creation';
+
   // Subscriptions
   static String getUserSubscription(String userId) =>
       '/subscriptions/user/$userId';
@@ -55,6 +68,10 @@ class ApiEndpoints {
   static const String estimateCustomPlan = '/subscriptions/estimate-custom';
   static const String requestCustomPlan = '/subscriptions/request-custom';
   static const String mySubscriptionRequests = '/subscriptions/my-requests';
+  static const String allCustomRequests = '/subscriptions/custom-requests';
+  static const String renewalRequest = '/subscriptions/renewal/request';
+  static const String pendingRenewalRequests =
+      '/subscriptions/renewal/requests/pending';
 
   // Public Content
   static const String publicContent = '/public/content';

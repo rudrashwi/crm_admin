@@ -1,6 +1,6 @@
-# CRM Admin Application
+# RudraCRM Admin Application
 
-A professional, fully responsive CRM Admin application built with Flutter. Designed for high-level business management with a focus on aesthetics, formal UI, and robust logic.
+A professional, fully responsive RudraCRM Admin application built with Flutter. Designed for high-level business management with a focus on aesthetics, formal UI, and robust logic.
 
 ## Features
 

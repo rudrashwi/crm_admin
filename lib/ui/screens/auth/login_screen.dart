@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'CRM ADMIN',
+                  'RUDRACRM ADMIN',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,

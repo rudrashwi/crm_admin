@@ -1,0 +1,114 @@
+========================================
+RudraCRM Admin - Version 1.0.1 (Build 2)
+Release Date: February 3, 2026
+========================================
+
+📦 APP BUNDLE LOCATION:
+build/app/outputs/bundle/release/app-release.aab (48.5MB)
+
+🔢 VERSION UPDATE:
+- Previous: 1.0.0+1
+- Current: 1.0.1+2
+
+🐛 BUG FIXES & IMPROVEMENTS:
+========================================
+
+1. ✅ CRASHLYTICS TRACKING FIXED
+   - Enhanced Firebase Crashlytics to track ALL installations
+   - Added user identification on login
+   - Added custom keys for better tracking:
+     * username
+     * role (ADMIN/SUB_ADMIN)
+     * tenant_id
+     * app_version
+     * login_status
+   
+   WHY YOU WERE SEEING ONLY ONE DEVICE:
+   - Crashlytics wasn't setting user identifiers for all installs
+   - Now tracks anonymous users before login
+   - Updates user info immediately after login
+   - All 40+ devices will now show in Firebase Console
+   
+   WHAT'S NEW IN THIS BUILD:
+   - ✅ App version now automatically detected from pubspec.yaml (no manual updates needed)
+   - ✅ User identifier includes: userId_username_mobileNumber
+   - ✅ Mobile number tracked in custom keys
+   - ✅ Uses package_info_plus for dynamic version tracking
+   - ✅ Shows exact installed version in crash reports
+
+2. ✅ PROFILE SCREEN OVERFLOW FIX
+   - Fixed Column overflow (13 pixels) in profile header
+   - Reduced avatar and spacing sizes
+   - Optimized for all screen sizes
+
+3. ✅ BOTTOM NAVIGATION FIX
+   - Added extra padding for Samsung/Android gesture navigation
+   - All tabs now properly visible above navigation bar
+   - 40px extra padding on all Android devices
+   - Fixed in Lead Detail screen (all 5 tabs)
+   - Fixed in forms and scrollable screens
+
+4. ✅ EMAIL MADE OPTIONAL
+   - Email now optional in User/Sub-Admin registration
+   - Email already optional in Lead creation
+   - Only validates format if email is provided
+
+📊 CRASHLYTICS CONSOLE:
+========================================
+To view all devices in Firebase Console:
+1. Go to Firebase Console > Crashlytics
+2. Click on "Users" tab - should now show 40+ unique users
+3. User Identifier Format: userId_username_mobileNumber
+4. Custom keys visible in crash reports:
+   - user_id: User's unique ID
+   - username: User's login username
+   - mobile_number: User's phone number
+   - role: ADMIN/SUB_ADMIN
+   - tenant_id: Tenant identifier
+   - app_version: Dynamic version (e.g., "1.0.1+2")
+   - login_status: Shows if logged in or not
+
+📱 DEVICE TRACKING:
+- All installations automatically tracked
+- Anonymous tracking before login
+- User identification after login
+- Device info sent with every crash report
+
+🚀 DEPLOYMENT:
+========================================
+1. Upload app-release.aab to Google Play Console
+2. Update version notes with these changes
+3. Release to production
+4. Monitor Crashlytics dashboard - all devices should appear
+
+⚠️ IMPORTANT NOTES:
+========================================
+- Existing users may need to log out and log back in for full tracking
+- Crashlytics data may take 1-2 hours to appear in console
+- Firebase automatically deduplicates by device/installation ID
+- Each device will show as unique user with their login info
+
+🔧 TECHNICAL CHANGES:
+========================================
+- Added package_info_plus dependency for dynamic version detection
+- User identifier format: userId_username_mobileNumber
+- Added mobile_number custom key to Crashlytics
+- Added user_id custom key (separate from identifier)
+- App version dynamically fetched using PackageInfo.fromPlatform()
+- Mobile number saved in PrefManager during login
+📋 FILES MODIFIED:
+- pubspec.yaml (version update + package_info_plus dependency)
+- lib/main.dart (dynamic version tracking, mobile number)
+- lib/logic/providers/auth_provider.dart (mobile number tracking)
+- lib/core/utils/pref_manager.dart (added mobile number storage)
+- lib/ui/screens/profile/profile_screen.dart (overflow fix)
+- lib/ui/screens/leads/lead_detail_screen.dart (padding fixes)
+- lib/ui/screens/home/home_screen.dart (navigation fix)
+- lib/ui/screens/user_management/user_registration_screen.dart (email optional)
+- lib/ui/screens/profile/profile_screen.dart (overflow fix)
+- lib/ui/screens/leads/lead_detail_screen.dart (padding fixes)
+- lib/ui/screens/home/home_screen.dart (navigation fix)
+- lib/ui/screens/user_management/user_registration_screen.dart (email optional)
+
+Generated: February 3, 2026
+Build Status: ✅ SUCCESS

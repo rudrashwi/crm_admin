@@ -16,7 +16,7 @@ class LeadModel {
   final String? createdByName;
   final String? createdAt;
   final String? updatedAt;
-  final String? nextFollowUp;
+  final Map<String, dynamic>? nextFollowUp;
   final List<TimelineEvent>? timeline;
   final List<CallRecord>? calls;
   final List<NoteRecord>? notes;
@@ -64,7 +64,7 @@ class LeadModel {
       createdByName: json['createdByName'],
       createdAt: json['createdAt'],
       updatedAt: json['updatedAt'],
-      nextFollowUp: json['nextFollowUp'],
+      nextFollowUp: json['nextFollowUp'] as Map<String, dynamic>?,
       timeline: json['timeline'] != null
           ? (json['timeline'] as List)
                 .map((e) => TimelineEvent.fromJson(e))

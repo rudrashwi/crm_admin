@@ -70,8 +70,34 @@ class LeadsRepository {
 
   Future<void> unassignLead(String leadId) async {
     try {
+      print('📡 [LeadsRepository] Calling unassign API for lead: $leadId');
       await _apiClient.post(ApiEndpoints.unassignLead(leadId));
+      print('✅ [LeadsRepository] Unassign API call successful');
     } catch (e) {
+      print('❌ [LeadsRepository] Unassign API call failed: $e');
+      rethrow;
+    }
+  }
+
+  Future<LeadModel> transferLead(String leadId, String newEmployeeId) async {
+    try {
+      print('📡 [LeadsRepository] Calling transfer API');
+      print('   Endpoint: ${ApiEndpoints.transferLead(leadId)}');
+      print('   Payload: {newEmployeeId: $newEmployeeId}');
+      
+      final response = await _apiClient.post(
+        ApiEndpoints.transferLead(leadId),
+        data: {
+          'newEmployeeId': newEmployeeId,
+        },
+      );
+      
+      print('✅ [LeadsRepository] Transfer API call successful');
+      print('   Response: ${response.data}');
+      
+      return LeadModel.fromJson(response.data['data']);
+    } catch (e) {
+      print('❌ [LeadsRepository] Transfer API call failed: $e');
       rethrow;
     }
   }
@@ -85,6 +111,21 @@ class LeadsRepository {
           'employeeIds': employeeIds,
         },
       );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Update lead status
+  Future<LeadModel> updateLeadStatus(String leadId, String status) async {
+    try {
+      final response = await _apiClient.put(
+        ApiEndpoints.updateLead(leadId),
+        data: {
+          'status': status,
+        },
+      );
+      return LeadModel.fromJson(response.data['data']);
     } catch (e) {
       rethrow;
     }

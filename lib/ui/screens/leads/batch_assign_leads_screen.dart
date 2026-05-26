@@ -247,7 +247,12 @@ class _BatchAssignLeadsScreenState extends State<BatchAssignLeadsScreen> {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(4),
+          padding: EdgeInsets.fromLTRB(
+            4,
+            4,
+            4,
+            4 + MediaQuery.of(context).viewPadding.bottom,
+          ),
           itemCount: unassignedLeads.length,
           itemBuilder: (context, index) {
             final lead = unassignedLeads[index];
@@ -422,7 +427,12 @@ class _BatchAssignLeadsScreenState extends State<BatchAssignLeadsScreen> {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(4),
+          padding: EdgeInsets.fromLTRB(
+            4,
+            4,
+            4,
+            4 + MediaQuery.of(context).viewPadding.bottom,
+          ),
           itemCount: employees.length,
           itemBuilder: (context, index) {
             final employee = employees[index];
@@ -552,10 +562,12 @@ class _BatchAssignLeadsScreenState extends State<BatchAssignLeadsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => DraggableScrollableSheet(
+      builder: (context) => SafeArea(
+        child: DraggableScrollableSheet(
         initialChildSize: 0.75,
         minChildSize: 0.5,
         maxChildSize: 0.9,
@@ -692,6 +704,7 @@ class _BatchAssignLeadsScreenState extends State<BatchAssignLeadsScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

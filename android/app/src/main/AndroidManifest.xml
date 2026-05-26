@@ -1,8 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- Permissions for call logs -->
+    <!-- Permissions for call logs (READ ONLY) -->
     <uses-permission android:name="android.permission.READ_CALL_LOG"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    
+    <!-- Explicitly remove WRITE_CALL_LOG added by permission_handler -->
+    <uses-permission android:name="android.permission.WRITE_CALL_LOG" tools:node="remove"/>
+    
+    <!-- Remove other unwanted permissions from permission_handler -->
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" tools:node="remove"/>
     
     <!-- Permissions for notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
@@ -12,17 +21,14 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
     
-    <!-- Permissions for file downloads -->
+    <!-- Permissions for file downloads (scoped storage) -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
-    <!-- For managing external storage (optional, for full access) -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
-        tools:ignore="ScopedStorage" />
     
     <application
-        android:label="crm_admin"
+        android:label="RudraCRM Admin"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

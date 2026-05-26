@@ -5,6 +5,7 @@ import 'package:crm_admin/core/constants/app_colors.dart';
 import 'package:crm_admin/core/utils/pref_manager.dart';
 import 'package:crm_admin/logic/providers/user_provider.dart';
 import 'package:crm_admin/logic/providers/leads_provider.dart';
+import 'package:crm_admin/logic/providers/permission_provider.dart';
 import 'package:crm_admin/ui/screens/user_management/employee_detail_screen.dart';
 import 'package:crm_admin/ui/screens/user_management/subadmin_detail_screen.dart';
 import 'package:crm_admin/data/models/auth/user_model.dart';
@@ -156,7 +157,12 @@ class _ViewUsersScreenState extends State<ViewUsersScreen> {
               else
                 Expanded(
                   child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      16 + MediaQuery.of(context).viewPadding.bottom,
+                    ),
                     itemCount: users.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) =>
@@ -186,87 +192,86 @@ class _ViewUsersScreenState extends State<ViewUsersScreen> {
 
   Widget _buildUserCard(UserModel user) {
     final isSubAdmin = user.role == 'SUB_ADMIN';
+    final isEmployee = user.role == 'EMPLOYEE';
     final accent = isSubAdmin ? AppColors.warning : AppColors.primary;
 
     return Card(
       color: Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        onTap: () => _navigateToDetailScreen(user),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: accent,
-          radius: 24,
-          child: Text(
-            user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : '?',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-        ),
-        title: Text(
-          user.fullName,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
           children: [
-            const SizedBox(height: 4),
-            Text(
-              '@${user.username.isNotEmpty ? user.username : 'no-username'}',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 2),
             Row(
               children: [
-                Expanded(
-                  child: Text(
-                    user.email,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
+                InkWell(
+                  onTap: () => _navigateToDetailScreen(user),
+                  child: CircleAvatar(
+                    backgroundColor: accent,
+                    radius: 24,
+                    child: Text(
+                      user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                 ),
-                // IconButton(
-                //   onPressed: () => _openEmail(user.email),
-                //   icon: const Icon(Icons.email, color: AppColors.primary, size: 16),
-                //   tooltip: 'Send Email',
-                //   padding: EdgeInsets.zero,
-                //   constraints: const BoxConstraints(),
-                // ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                _buildBadge(isSubAdmin ? 'SUB-ADMIN' : 'EMPLOYEE', accent),
-                const SizedBox(width: 6),
-                _buildBadge(
-                  user.isActive ? 'ACTIVE' : 'INACTIVE',
-                  user.isActive ? AppColors.success : AppColors.error,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: InkWell(
+                    onTap: () => _navigateToDetailScreen(user),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user.fullName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '@${user.username.isNotEmpty ? user.username : 'no-username'}',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          user.email,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            _buildBadge(isSubAdmin ? 'SUB-ADMIN' : 'EMPLOYEE', accent),
+                            const SizedBox(width: 6),
+                            _buildBadge(
+                              user.isActive ? 'ACTIVE' : 'INACTIVE',
+                              user.isActive ? AppColors.success : AppColors.error,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          ],
-        ),
-        trailing: isSubAdmin
-            ? null
-            : PopupMenuButton<String>(
-                onSelected: (value) => _handleMenuSelection(value, user),
-                itemBuilder: (context) {
-                  final currentUserRole = PrefManager.getRole();
-                  final isCurrentUserSubAdmin = currentUserRole == 'SUB_ADMIN';
-                  // SUB_ADMIN cannot terminate/reactivate other SUB_ADMINs
-                  final canModifyUser = !(isCurrentUserSubAdmin && isSubAdmin);
+                if (!isSubAdmin)
+                  PopupMenuButton<String>(
+                    onSelected: (value) => _handleMenuSelection(value, user),
+                    itemBuilder: (context) {
+                      final currentUserRole = PrefManager.getRole();
+                      final isCurrentUserSubAdmin = currentUserRole == 'SUB_ADMIN';
+                      // SUB_ADMIN cannot terminate/reactivate other SUB_ADMINs
+                      final canModifyUser = !(isCurrentUserSubAdmin && isSubAdmin);
 
-                  return [
+                      return [
                     if (!isSubAdmin)
                       const PopupMenuItem(
                         value: 'assign',
@@ -332,6 +337,77 @@ class _ViewUsersScreenState extends State<ViewUsersScreen> {
                   ];
                 },
               ),
+              ],
+            ),
+            // Add permission toggle for employees only - COMMENTED OUT
+            // Use employee detail screen to toggle permissions
+            // if (isEmployee) ...[
+            //   const Divider(height: 16),
+            //   Consumer<PermissionProvider>(
+            //     builder: (context, permissionProvider, _) {
+            //       
+            //       return Row(
+            //         children: [
+            //           const Icon(Icons.add_circle_outline, size: 18, color: AppColors.textSecondary),
+            //           const SizedBox(width: 8),
+            //           const Expanded(
+            //             child: Text(
+            //               'Can Create Leads',
+            //               style: TextStyle(
+            //                 fontSize: 13,
+            //                 fontWeight: FontWeight.w600,
+            //                 color: AppColors.textSecondary,
+            //               ),
+            //             ),
+            //           ),
+            //           Switch(
+            //             value: user.canCreateLeads,
+            //             onChanged: permissionProvider.isLoading
+            //                 ? null
+            //                 : (value) async {
+            //                     
+            //                     final messenger = ScaffoldMessenger.of(context);
+            //                     final userProvider = context.read<UserProvider>();
+            //                     
+            //                     final success = await permissionProvider.toggleLeadCreationPermission(
+            //                       user.id,
+            //                       user.canCreateLeads,
+            //                     );
+            //                     
+            //                     if (success) {
+            //                       // Refresh the user list to get updated data
+            //                       await userProvider.fetchUsers();
+            //                       
+            //                       messenger.showSnackBar(
+            //                         SnackBar(
+            //                           content: Text(
+            //                             value 
+            //                               ? 'Lead creation permission granted to ${user.fullName}'
+            //                               : 'Lead creation permission revoked from ${user.fullName}',
+            //                           ),
+            //                           backgroundColor: value ? AppColors.success : AppColors.warning,
+            //                           behavior: SnackBarBehavior.floating,
+            //                         ),
+            //                       );
+            //                     } else if (permissionProvider.error != null) {
+            //                       messenger.showSnackBar(
+            //                         SnackBar(
+            //                           content: Text(permissionProvider.error!),
+            //                           backgroundColor: AppColors.error,
+            //                           behavior: SnackBarBehavior.floating,
+            //                         ),
+            //                       );
+            //                     }
+            //                   },
+            //             activeColor: AppColors.success,
+            //           ),
+            //         ],
+            //       );
+            //     },
+            //   ),
+            // ],
+          ],
+        ),
       ),
     );
   }
@@ -442,11 +518,14 @@ class _ViewUsersScreenState extends State<ViewUsersScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _AssignLeadsBottomSheet(
-        employeeId: user.id,
-        employeeName: user.fullName,
-        username: user.username,
+      builder: (context) => SafeArea(
+        child: _AssignLeadsBottomSheet(
+          employeeId: user.id,
+          employeeName: user.fullName,
+          username: user.username,
+        ),
       ),
     );
   }
@@ -631,7 +710,9 @@ class _AssignLeadsBottomSheetState extends State<_AssignLeadsBottomSheet> {
                           )
                         : ListView.builder(
                             controller: scrollController,
-                            padding: const EdgeInsets.only(bottom: 80),
+                            padding: EdgeInsets.only(
+                              bottom: 80 + MediaQuery.of(context).viewPadding.bottom,
+                            ),
                             itemCount: filteredLeads.length,
                             itemBuilder: (context, index) {
                               final lead = filteredLeads[index];

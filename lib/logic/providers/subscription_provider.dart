@@ -226,4 +226,40 @@ class SubscriptionProvider extends ChangeNotifier {
     _requestCalculation = null;
     notifyListeners();
   }
+
+  Future<bool> requestRenewal({
+    required int numSubAdmins,
+    required int numEmployees,
+    required int subscriptionDurationDays,
+  }) async {
+    dev.log(
+      '🚀 [SubscriptionProvider] Requesting renewal: SubAdmins=$numSubAdmins, Employees=$numEmployees, Days=$subscriptionDurationDays',
+      name: 'SUBSCRIPTION',
+    );
+    _setLoading(true);
+    try {
+      final result = await _repository.requestRenewal(
+        numSubAdmins: numSubAdmins,
+        numEmployees: numEmployees,
+        subscriptionDurationDays: subscriptionDurationDays,
+      );
+      dev.log(
+        '✅ [SubscriptionProvider] Renewal requested successfully',
+        name: 'SUBSCRIPTION',
+      );
+
+      _error = null;
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      dev.log(
+        '❌ [SubscriptionProvider] Renewal request failed: $e',
+        name: 'SUBSCRIPTION',
+      );
+      _error = _handleError(e);
+      _setLoading(false);
+      return false;
+    }
+  }
 }
+

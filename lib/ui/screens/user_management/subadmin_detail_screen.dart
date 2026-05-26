@@ -561,8 +561,22 @@ class _SubAdminDetailScreenState extends State<SubAdminDetailScreen> {
   Future<void> _showTerminateDialog() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Terminate Sub-Admin'),
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            const Text('Terminate Sub-Admin'),
+            const Spacer(),
+            IconButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              icon: const Icon(Icons.close),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
         content: Text('Are you sure you want to terminate ${widget.user.fullName}? They will no longer have access to the system.'),
         actions: [
           TextButton(

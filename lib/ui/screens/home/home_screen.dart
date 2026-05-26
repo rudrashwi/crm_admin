@@ -119,9 +119,14 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       },
       child: Scaffold(
-        body: IndexedStack(index: _currentIndex, children: _screens),
+        body: SafeArea(
+          bottom:
+              false, // Don't apply bottom padding as bottomNavigationBar handles it
+          child: IndexedStack(index: _currentIndex, children: _screens),
+        ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
+            color: Colors.white,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
@@ -130,19 +135,24 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: (index) => setState(() => _currentIndex = index),
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: AppColors.textSecondary,
-            showUnselectedLabels: true,
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+          child: SafeArea(
+            top: false,
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) => setState(() => _currentIndex = index),
+              type: BottomNavigationBarType.fixed,
+              selectedItemColor: AppColors.primary,
+              unselectedItemColor: AppColors.textSecondary,
+              showUnselectedLabels: true,
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              selectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              unselectedLabelStyle: const TextStyle(fontSize: 12),
+              items: _navItems,
             ),
-            unselectedLabelStyle: const TextStyle(fontSize: 12),
-            items: _navItems,
           ),
         ),
       ),

@@ -7,6 +7,7 @@ class EmployeeDetail {
   final String email;
   final String role;
   final bool isActive;
+  final bool canCreateLeads;
   final int totalAssignedLeads;
   final int activeLeads;
   final int closedLeads;
@@ -21,6 +22,7 @@ class EmployeeDetail {
     required this.email,
     required this.role,
     required this.isActive,
+    required this.canCreateLeads,
     required this.totalAssignedLeads,
     required this.activeLeads,
     required this.closedLeads,
@@ -37,6 +39,7 @@ class EmployeeDetail {
       email: json['email'] ?? '',
       role: json['role'] ?? '',
       isActive: json['isActive'] ?? false,
+      canCreateLeads: json['canCreateLeads'] ?? false,
       totalAssignedLeads: json['totalAssignedLeads'] ?? 0,
       activeLeads: json['activeLeads'] ?? 0,
       closedLeads: json['closedLeads'] ?? 0,
@@ -75,6 +78,7 @@ class EmployeeDetail {
     String? email,
     String? role,
     bool? isActive,
+    bool? canCreateLeads,
     int? totalAssignedLeads,
     int? activeLeads,
     int? closedLeads,
@@ -89,6 +93,7 @@ class EmployeeDetail {
       email: email ?? this.email,
       role: role ?? this.role,
       isActive: isActive ?? this.isActive,
+      canCreateLeads: canCreateLeads ?? this.canCreateLeads,
       totalAssignedLeads: totalAssignedLeads ?? this.totalAssignedLeads,
       activeLeads: activeLeads ?? this.activeLeads,
       closedLeads: closedLeads ?? this.closedLeads,

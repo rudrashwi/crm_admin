@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:crm_admin/core/utils/pref_manager.dart';
 import 'package:crm_admin/data/models/auth/user_model.dart';
 import 'package:crm_admin/data/repositories/auth_repository.dart';
@@ -85,14 +87,20 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> login(String username, String password, String selectedRole) async {
+  Future<bool> login(
+    String username,
+    String password,
+    String selectedRole,
+  ) async {
     _setLoading(true);
     _setError(null);
     try {
       final response = await _repository.login(username, password);
       // Allow login only for ADMIN or SUB_ADMIN role and match selected role
       if (response.user.role != 'ADMIN' && response.user.role != 'SUB_ADMIN') {
-        _setError('Only users with ADMIN or SUB_ADMIN role are allowed to login.');
+        _setError(
+          'Only users with ADMIN or SUB_ADMIN role are allowed to login.',
+        );
         _setLoading(false);
         return false;
       }
@@ -113,10 +121,51 @@ class AuthProvider extends ChangeNotifier {
       await PrefManager.setRole(response.user.role);
       await PrefManager.setEmail(response.user.email);
       await PrefManager.setFullName(response.user.fullName);
-      
+      await PrefManager.setMobileNumber(response.user.mobileNumber ?? 'N/A');
+
+      // Get app version dynamically
+      final packageInfo = await PackageInfo.fromPlatform();
+      final appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+
+      // Set Crashlytics user info for better crash tracking
+      // Create a combined identifier: userId_username_mobile
+      final userIdentifier =
+          '${response.user.id}_${response.user.username}_${response.user.mobileNumber ?? "N/A"}';
+      await FirebaseCrashlytics.instance.setUserIdentifier(userIdentifier);
+
+      await FirebaseCrashlytics.instance.setCustomKey(
+        'user_id',
+        response.user.id,
+      );
+      await FirebaseCrashlytics.instance.setCustomKey(
+        'username',
+        response.user.username,
+      );
+      await FirebaseCrashlytics.instance.setCustomKey(
+        'mobile_number',
+        response.user.mobileNumber ?? 'N/A',
+      );
+      await FirebaseCrashlytics.instance.setCustomKey(
+        'role',
+        response.user.role,
+      );
+      await FirebaseCrashlytics.instance.setCustomKey(
+        'tenant_id',
+        response.user.tenantId,
+      );
+      await FirebaseCrashlytics.instance.setCustomKey(
+        'app_version',
+        appVersion,
+      );
+      print(
+        '🔥 Crashlytics updated: $userIdentifier (Role: ${response.user.role}, Version: $appVersion)',
+      );
+
       // Verify what was saved
       print('🔍 [AuthProvider] Saved userId: "${response.user.id}"');
-      print('🔍 [AuthProvider] Verified from storage: "${PrefManager.getUserId()}"');
+      print(
+        '🔍 [AuthProvider] Verified from storage: "${PrefManager.getUserId()}"',
+      );
 
       _setLoading(false);
       return true;

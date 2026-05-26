@@ -7,6 +7,7 @@ import 'package:crm_admin/core/constants/app_colors.dart';
 import 'package:crm_admin/core/utils/pref_manager.dart';
 import 'package:crm_admin/logic/providers/user_provider.dart';
 import 'package:crm_admin/logic/providers/leads_provider.dart';
+import 'package:crm_admin/logic/providers/permission_provider.dart';
 import 'package:crm_admin/data/models/auth/user_model.dart';
 import 'package:crm_admin/ui/screens/leads/lead_detail_screen.dart';
 
@@ -25,7 +26,10 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
     _localIsActive = widget.user.isActive;
     if (widget.user.id.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Fetch employee details
         context.read<UserProvider>().fetchEmployeeDetails(widget.user.id);
+        // Check permission status
+        context.read<PermissionProvider>().checkPermission(widget.user.id);
       });
     }
   }
@@ -34,13 +38,19 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
 
   Future<void> _refresh() {
     if (widget.user.id.isEmpty) return Future.value();
-    return context.read<UserProvider>().fetchEmployeeDetails(widget.user.id);
+    // Refresh both employee details and permission status
+    return Future.wait([
+      context.read<UserProvider>().fetchEmployeeDetails(widget.user.id),
+      context.read<PermissionProvider>().checkPermission(widget.user.id).then((_) {}),
+    ]);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return PopScope(
+      canPop: true,
+      child: Scaffold(
+        appBar: AppBar(
         title: Text(widget.user.fullName),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh),
@@ -84,6 +94,8 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                   const SizedBox(height: 16),
                   if (detail != null) ...[
                     _buildStats(detail),
+                    const SizedBox(height: 24),
+                    _buildMissedFollowUps(detail),
                     const SizedBox(height: 24),
                     Row(
                       children: [
@@ -144,61 +156,79 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Expanded(
-                                        child: Text(
-                                          lead.customerName,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 16,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              lead.customerName,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: _getStatusColor(lead.status).withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Text(
+                                                lead.status,
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: _getStatusColor(lead.status),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Material(
+                                        elevation: 2,
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Colors.white,
+                                        child: InkWell(
+                                          onTap: () => _unassignLead(lead.id),
+                                          borderRadius: BorderRadius.circular(10),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: AppColors.error.withOpacity(0.3),
+                                                width: 1.5,
+                                              ),
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.link_off_rounded,
+                                                  size: 18,
+                                                  color: AppColors.error,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  'Unassign',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: AppColors.error,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
-
-                                      // Container(
-                                      //   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                      //   decoration: BoxDecoration(
-                                      //     color: _getStatusColor(lead.status).withOpacity(0.15),
-                                      //     borderRadius: BorderRadius.circular(6),
-                                      //   ),
-                                      //   child: Text(
-                                      //     lead.status,
-                                      //     style: TextStyle(
-                                      //       color: _getStatusColor(lead.status),
-                                      //       fontWeight: FontWeight.w700,
-                                      //       fontSize: 11,
-                                      //     ),
-                                      //   ),
-                                      // ),
-                                      TextButton.icon(
-                                        onPressed: () => _unassignLead(lead.id),
-                                        icon: const Icon(Icons.close, size: 16),
-                                        label: const Text('Unassign'),
-                                        style: TextButton.styleFrom(
-                                          foregroundColor: AppColors.error,
-                                          // padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                                        ),
-                                      ),
-
-                                      //      Row(
-                                      //   mainAxisAlignment: MainAxisAlignment.end,
-                                      //   children: [
-                                      //     TextButton.icon(
-                                      //       onPressed: () => _unassignLead(lead.id),
-                                      //       icon: const Icon(Icons.close, size: 16),
-                                      //       label: const Text('Unassign'),
-                                      //       style: TextButton.styleFrom(
-                                      //         foregroundColor: AppColors.error,
-                                      //         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                                      //       ),
-                                      //     ),
-                                      //   ],
-                                      // ),
                                     ],
                                   ),
-                                  //const SizedBox(height: 8),
+                                  const SizedBox(height: 12),
                                   Row(
                                     children: [
                                       const Icon(
@@ -257,6 +287,7 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
             ),
           );
         },
+      ),
       ),
     );
   }
@@ -478,6 +509,116 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
               minimumSize: const Size.fromHeight(48),
             ),
           ),
+        // Permission toggle for employees only
+        if (widget.user.role == 'EMPLOYEE') ...[
+          const SizedBox(height: 12),
+          Consumer<PermissionProvider>(
+            builder: (context, permissionProvider, _) {
+              return Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.add_circle_outline,
+                          color: AppColors.primary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Can Create Leads',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Allow employee to create their own leads',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Consumer2<UserProvider, PermissionProvider>(
+                        builder: (context, userProvider, permissionProvider, _) {
+                          final detail = userProvider.selectedEmployee;
+                          // First check the permission cache, then fall back to employee detail or user model
+                          final cachedPermission = permissionProvider.getPermissionFromCache(widget.user.id);
+                          final currentValue = cachedPermission 
+                              ?? detail?.canCreateLeads 
+                              ?? widget.user.canCreateLeads;
+                          
+                          return Switch(
+                            value: currentValue,
+                            onChanged: permissionProvider.isLoading
+                                ? null
+                                : (value) async {
+                                    final messenger = ScaffoldMessenger.of(context);
+                                    
+                                    final success = await permissionProvider.toggleLeadCreationPermission(
+                                      widget.user.id,
+                                      currentValue,
+                                    );
+                                    
+                                    if (success) {
+                                      // Refresh the employee details and re-check permission
+                                      await Future.wait([
+                                        userProvider.fetchEmployeeDetails(widget.user.id),
+                                        permissionProvider.checkPermission(widget.user.id).then((_) {}),
+                                      ]);
+                                  
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            value 
+                                              ? 'Lead creation permission granted to ${widget.user.fullName}'
+                                              : 'Lead creation permission revoked from ${widget.user.fullName}',
+                                          ),
+                                          backgroundColor: value ? AppColors.success : AppColors.warning,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    } else if (permissionProvider.error != null) {
+                                      messenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text(permissionProvider.error!),
+                                          backgroundColor: AppColors.error,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  },
+                            activeColor: AppColors.success,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ],
     );
   }
@@ -578,6 +719,207 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
     );
   }
 
+  Widget _buildMissedFollowUps(detail) {
+    final now = DateTime.now();
+    final List<Map<String, dynamic>> missedFollowUps = [];
+
+    // Collect all missed follow-ups from recent leads
+    for (final lead in detail.recentLeads) {
+      if (lead.followUps != null) {
+        for (final followUp in lead.followUps!) {
+          // Check if follow-up is missed
+          if (followUp.status != 'COMPLETED' && followUp.status != 'CANCELLED') {
+            if (followUp.scheduledDateTime != null) {
+              try {
+                final scheduledTime = DateTime.parse(followUp.scheduledDateTime!);
+                if (scheduledTime.isBefore(now)) {
+                  missedFollowUps.add({
+                    'followUp': followUp,
+                    'lead': lead,
+                  });
+                }
+              } catch (e) {
+                // Skip invalid dates
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Sort by scheduled time (oldest first)
+    missedFollowUps.sort((a, b) {
+      final aTime = DateTime.parse(a['followUp'].scheduledDateTime);
+      final bTime = DateTime.parse(b['followUp'].scheduledDateTime);
+      return aTime.compareTo(bTime);
+    });
+
+    if (missedFollowUps.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.warning_rounded,
+              color: AppColors.error,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Missed Follow-ups (${missedFollowUps.length})',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.error,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...missedFollowUps.take(5).map((item) {
+          final followUp = item['followUp'];
+          final lead = item['lead'];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            elevation: 2,
+            color: AppColors.error.withOpacity(0.05),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColors.error.withOpacity(0.3), width: 1.5),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LeadDetailScreen(leadId: lead.id),
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.event_busy,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                lead.contactName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Lead: ${lead.id.substring(0, 8)}...',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'MISSED',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Scheduled: ${DateFormat('MMM dd, yyyy HH:mm').format(
+                            DateTime.parse(followUp.scheduledDateTime!),
+                          )}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (followUp.notes != null && followUp.notes!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        followUp.notes!,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+        if (missedFollowUps.length > 5)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Center(
+              child: Text(
+                '+${missedFollowUps.length - 5} more missed follow-ups',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _statCard(String title, String value, IconData icon, Color color) {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = (screenWidth - 56) / 2; // 2 cards per row with padding
@@ -662,8 +1004,22 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
   Future<void> _unassignLead(String leadId) async {
     final confirmation = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Unassign Lead'),
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            const Text('Unassign Lead'),
+            const Spacer(),
+            IconButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              icon: const Icon(Icons.close),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
         content: const Text('Are you sure you want to unassign this lead?'),
         actions: [
           TextButton(
@@ -713,10 +1069,13 @@ class _EmployeeDetailScreenState extends State<EmployeeDetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _AssignLeadsBottomSheet(employeeId: widget.user.id),
+      builder: (context) => SafeArea(
+        child: _AssignLeadsBottomSheet(employeeId: widget.user.id),
+      ),
     );
   }
 
@@ -990,6 +1349,9 @@ class _AssignLeadsBottomSheetState extends State<_AssignLeadsBottomSheet> {
                         )
                       : ListView.builder(
                           controller: scrollController,
+                          padding: EdgeInsets.only(
+                            bottom: 80 + MediaQuery.of(context).viewPadding.bottom,
+                          ),
                           itemCount: filteredLeads.length,
                           itemBuilder: (context, index) {
                             final lead = filteredLeads[index];

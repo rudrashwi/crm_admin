@@ -18,6 +18,18 @@ class _SubscriptionPricingScreenState extends State<SubscriptionPricingScreen> {
   final _subAdminsController = TextEditingController(text: '1');
   final _employeesController = TextEditingController(text: '1');
 
+  // Duration options
+  final List<Map<String, dynamic>> _durationOptions = [
+    {'label': '1 Week', 'days': 7},
+    {'label': '1 Month', 'days': 30},
+    {'label': '2 Months', 'days': 60},
+    {'label': '3 Months', 'days': 90},
+    {'label': '6 Months', 'days': 180},
+    {'label': '1 Year', 'days': 365},
+  ];
+
+  int _selectedDurationDays = 30; // Default to 1 month
+
   @override
   void initState() {
     super.initState();
@@ -124,25 +136,17 @@ class _SubscriptionPricingScreenState extends State<SubscriptionPricingScreen> {
 
                 // Pricing Cards
                 _buildPricingCard(
-                  'Admin Fee',
-                  '₹${pricing.adminFee.toStringAsFixed(2)}',
-                  'One-time setup fee',
-                  Icons.admin_panel_settings,
-                  AppColors.primary,
-                ),
-                const SizedBox(height: 12),
-                _buildPricingCard(
                   'Sub-Admin',
-                  '₹${pricing.subAdminPrice.toStringAsFixed(2)}',
-                  'Per sub-admin per month',
+                  '₹${pricing.subAdminPricePerDay.toStringAsFixed(2)}/day',
+                  'Per sub-admin per day',
                   Icons.supervisor_account,
                   AppColors.warning,
                 ),
                 const SizedBox(height: 12),
                 _buildPricingCard(
                   'Employee',
-                  '₹${pricing.employeePrice.toStringAsFixed(2)}',
-                  'Per employee per month',
+                  '₹${pricing.employeePricePerDay.toStringAsFixed(2)}/day',
+                  'Per employee per day',
                   Icons.person,
                   AppColors.info,
                 ),
@@ -193,6 +197,53 @@ class _SubscriptionPricingScreenState extends State<SubscriptionPricingScreen> {
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.people),
                         ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Duration Selection
+                      const Text(
+                        'Subscription Duration',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _durationOptions.map((option) {
+                          final isSelected =
+                              _selectedDurationDays == option['days'];
+                          return ChoiceChip(
+                            label: Text(option['label']),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() {
+                                  _selectedDurationDays = option['days'];
+                                });
+                                // Auto-update estimate when duration changes
+                                if (provider.estimate != null) {
+                                  _estimatePlan();
+                                }
+                              }
+                            },
+                            selectedColor: AppColors.primary,
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : AppColors.textPrimary,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                            backgroundColor: Colors.white,
+                            side: BorderSide(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : Colors.grey.shade300,
+                            ),
+                          );
+                        }).toList(),
                       ),
                       const SizedBox(height: 16),
 
@@ -389,7 +440,7 @@ class _SubscriptionPricingScreenState extends State<SubscriptionPricingScreen> {
         .estimateCustomPlan(
           numSubAdmins: subAdmins,
           numEmployees: employees,
-          subscriptionDurationDays: 30, // Default 1 month
+          subscriptionDurationDays: _selectedDurationDays,
         );
 
     if (!mounted) return;
@@ -413,12 +464,17 @@ class _SubscriptionPricingScreenState extends State<SubscriptionPricingScreen> {
       return;
     }
 
+    // Get duration label for display
+    final durationLabel = _durationOptions.firstWhere(
+      (opt) => opt['days'] == _selectedDurationDays,
+    )['label'];
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Request'),
         content: Text(
-          'Request subscription for:\n• $subAdmins Sub-Admins\n• $employees Employees\n• Duration: 1 Month (30 days)\n\nProceed?',
+          'Request subscription for:\n• $subAdmins Sub-Admins\n• $employees Employees\n• Duration: $durationLabel ($_selectedDurationDays days)\n\nProceed?',
         ),
         actions: [
           TextButton(
@@ -440,7 +496,7 @@ class _SubscriptionPricingScreenState extends State<SubscriptionPricingScreen> {
         .requestCustomPlan(
           numSubAdmins: subAdmins,
           numEmployees: employees,
-          subscriptionDurationDays: 30, // Default 1 month
+          subscriptionDurationDays: _selectedDurationDays,
         );
 
     if (!mounted) return;

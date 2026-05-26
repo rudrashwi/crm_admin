@@ -326,7 +326,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 24),
               const Text(
-                'CRM ADMIN',
+                'RUDRACRM ADMIN',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,

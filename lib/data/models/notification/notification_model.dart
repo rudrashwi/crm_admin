@@ -30,7 +30,7 @@ class NotificationModel {
       message: json['message'] as String,
       type: json['type'] as String,
       data: json['data'] as String?,
-      isRead: json['isRead'] as bool,
+      isRead: (json['isRead'] as bool?) ?? false, // Handle null as false
       createdAt: json['createdAt'] as String,
     );
   }

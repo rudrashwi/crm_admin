@@ -119,4 +119,86 @@ class NotificationRepository {
       return false;
     }
   }
+
+  /// Delete a single notification
+  Future<bool> deleteNotification(String notificationId) async {
+    try {
+      log('[NOTIF_REPO] Deleting notification...');
+      log('[NOTIF_REPO] Notification ID: $notificationId');
+
+      final response = await _apiClient.delete(
+        ApiEndpoints.deleteNotification(notificationId),
+      );
+
+      log('[NOTIF_REPO] Response status code: ${response.statusCode}');
+      log('[NOTIF_REPO] Response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        log('[NOTIF_REPO] Notification deleted successfully');
+        return true;
+      } else {
+        log('[NOTIF_REPO] ERROR: Failed to delete notification: ${response.statusCode}');
+        return false;
+      }
+    } catch (e, stackTrace) {
+      log('[NOTIF_REPO] Unexpected error deleting notification: $e');
+      log('[NOTIF_REPO] Stack trace: $stackTrace');
+      return false;
+    }
+  }
+
+  /// Delete multiple notifications by IDs
+  Future<bool> deleteBatchNotifications(List<String> notificationIds) async {
+    try {
+      log('[NOTIF_REPO] Deleting batch notifications...');
+      log('[NOTIF_REPO] Count: ${notificationIds.length}');
+
+      final response = await _apiClient.delete(
+        ApiEndpoints.deleteBatchNotifications,
+        data: {'notificationIds': notificationIds},
+      );
+
+      log('[NOTIF_REPO] Response status code: ${response.statusCode}');
+      log('[NOTIF_REPO] Response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        log('[NOTIF_REPO] Batch notifications deleted successfully');
+        return true;
+      } else {
+        log('[NOTIF_REPO] ERROR: Failed to delete batch notifications: ${response.statusCode}');
+        return false;
+      }
+    } catch (e, stackTrace) {
+      log('[NOTIF_REPO] Unexpected error deleting batch notifications: $e');
+      log('[NOTIF_REPO] Stack trace: $stackTrace');
+      return false;
+    }
+  }
+
+  /// Delete all notifications
+  Future<bool> deleteAllNotifications() async {
+    try {
+      log('[NOTIF_REPO] Deleting all notifications...');
+
+      final response = await _apiClient.delete(
+        ApiEndpoints.deleteBatchNotifications,
+        data: {'notificationIds': []}, // Empty array means delete all
+      );
+
+      log('[NOTIF_REPO] Response status code: ${response.statusCode}');
+      log('[NOTIF_REPO] Response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        log('[NOTIF_REPO] All notifications deleted successfully');
+        return true;
+      } else {
+        log('[NOTIF_REPO] ERROR: Failed to delete all notifications: ${response.statusCode}');
+        return false;
+      }
+    } catch (e, stackTrace) {
+      log('[NOTIF_REPO] Unexpected error deleting all notifications: $e');
+      log('[NOTIF_REPO] Stack trace: $stackTrace');
+      return false;
+    }
+  }
 }

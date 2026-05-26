@@ -372,10 +372,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: true,
-      child: Scaffold(
-        appBar: AppBar(
+    return Scaffold(
+      appBar: AppBar(
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -402,15 +400,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
               )
             : null,
         actions: [
-          if (_isSelectionMode)
+          if (_isSelectionMode) ...[
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
                 final provider = context.read<NotificationProvider>();
                 _handleBatchDelete(provider);
               },
-            )
-          else
+            ),
+          } else ...[
+            // Three-dots menu (delete all) commented out per request
+            // If you want to re-enable later, restore the PopupMenuButton here.
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: () {
@@ -418,8 +418,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                 provider.refresh();
               },
             ),
-          // Three-dots menu (delete all) commented out per request
-          // If you want to re-enable later, restore the PopupMenuButton here.
+          ],
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -506,7 +505,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           );
         },
       ),
-      ),
     );
   }
 
@@ -564,12 +562,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
       onRefresh: () => provider.refresh(),
       color: AppColors.accent,
       child: ListView.builder(
-        padding: EdgeInsets.fromLTRB(
-          12,
-          12,
-          12,
-          12 + MediaQuery.of(context).viewPadding.bottom,
-        ),
+        padding: const EdgeInsets.all(12),
         itemCount: notifications.length,
         itemBuilder: (context, index) {
           final notification = notifications[index];
@@ -634,7 +627,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                               : null,
                         )
                       : Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [typeColor, typeColor.withOpacity(0.7)],

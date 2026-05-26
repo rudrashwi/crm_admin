@@ -30,7 +30,7 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             const Text(
-              'CRM Admin',
+              'RudraCRM Admin',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
