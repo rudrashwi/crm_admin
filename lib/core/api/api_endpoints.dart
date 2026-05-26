@@ -1,5 +1,5 @@
 class ApiEndpoints {
-  static const String baseUrl = 'http://13.232.29.190:8080';
+  static const String baseUrl = 'https://api.rudraashwicrm.com';
 
   // Auth
   static const String registerAdmin = '/auth/admin/register';

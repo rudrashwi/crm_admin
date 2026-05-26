@@ -64,8 +64,9 @@ class _AddLeadScreenState extends State<AddLeadScreen> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 validator: (v) {
-                  if (v!.isEmpty) return 'Required';
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return 'Enter valid email';
+                  // Email is optional. If provided, validate format.
+                  if (v == null || v.trim().isEmpty) return null;
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}\$').hasMatch(v.trim())) return 'Enter valid email';
                   return null;
                 },
               ),

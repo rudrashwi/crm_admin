@@ -35,7 +35,7 @@ class LeadsProvider extends ChangeNotifier {
   Future<bool> createLead({
     required String customerName,
     required String contactPhone,
-    required String email,
+    String? email,
     required String requirementMessage,
   }) async {
     _setLoading(true);
