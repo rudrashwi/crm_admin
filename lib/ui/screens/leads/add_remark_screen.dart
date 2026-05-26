@@ -45,10 +45,8 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-check call logs on screen load
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _searchCallLog();
-    });
+    // Do not auto-check call logs on screen load.
+    // Searching call logs must be initiated manually by the user.
   }
 
   @override
@@ -61,9 +59,6 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
 
   /// Check if submit button should be enabled
   bool get _canSubmit {
-    // Must have found a call in call logs
-    if (_foundCall == null) return false;
-
     // Must have call notes
     final hasContent = _callNotesController.text.trim().isNotEmpty;
 
@@ -72,6 +67,7 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
       return hasContent && _selectedDateTime != null;
     }
 
+    // Allow submission with call notes even if no call log entry was found.
     return hasContent;
   }
 
@@ -253,9 +249,7 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
 
     if (!_canSubmit) {
       String message;
-      if (_foundCall == null) {
-        message = 'Please search and find a call in call logs first';
-      } else if (_selectedCallType == CallType.followUpScheduled &&
+      if (_selectedCallType == CallType.followUpScheduled &&
           _selectedDateTime == null) {
         message = 'Please provide call notes and schedule date/time';
       } else {

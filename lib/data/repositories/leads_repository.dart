@@ -21,18 +21,22 @@ class LeadsRepository {
   Future<LeadModel> createLead({
     required String customerName,
     required String contactPhone,
-    required String email,
+    String? email,
     required String requirementMessage,
   }) async {
     try {
+      final data = {
+        'customerName': customerName,
+        'contactPhone': contactPhone,
+        'requirementMessage': requirementMessage,
+      };
+      if (email != null && email.isNotEmpty) {
+        data['email'] = email;
+      }
+
       final response = await _apiClient.post(
         ApiEndpoints.createLead,
-        data: {
-          'customerName': customerName,
-          'contactPhone': contactPhone,
-          'email': email,
-          'requirementMessage': requirementMessage,
-        },
+        data: data,
       );
       return LeadModel.fromJson(response.data['data']);
     } catch (e) {
