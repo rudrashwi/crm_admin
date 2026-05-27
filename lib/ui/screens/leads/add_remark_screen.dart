@@ -1,8 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:call_log/call_log.dart' as call_log;
 import 'package:crm_admin/core/constants/app_colors.dart';
 import 'package:crm_admin/logic/providers/remark_provider.dart';
 import 'package:crm_admin/data/models/leads/interaction_model.dart';
@@ -29,13 +27,9 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
   final _remarkController = TextEditingController();
   final _callNotesController = TextEditingController();
   final _followUpNotesController = TextEditingController();
+  final _callDurationController = TextEditingController(text: '0');
 
-  bool _isCheckingPermission = false;
-  bool _isSearchingCallLog = false;
-
-  call_log.CallLogEntry? _foundCall;
-  String? _permissionError;
-  bool _callLogChecked = false;
+  // Removed call log tracking variables
 
   // New fields for interaction API
   String _selectedCallType = CallType.newLead;
@@ -54,6 +48,7 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
     _remarkController.dispose();
     _callNotesController.dispose();
     _followUpNotesController.dispose();
+    _callDurationController.dispose();
     super.dispose();
   }
 
@@ -62,140 +57,13 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
     // Must have call notes
     final hasContent = _callNotesController.text.trim().isNotEmpty;
 
-    // If follow-up scheduled, must have datetime
-    if (_selectedCallType == CallType.followUpScheduled) {
+    // If follow-up scheduled or callback requested, must have datetime
+    if (_selectedCallType == CallType.followUpScheduled ||
+        _selectedCallType == CallType.callbackRequested) {
       return hasContent && _selectedDateTime != null;
     }
 
-    // Allow submission with call notes even if no call log entry was found.
     return hasContent;
-  }
-
-  /// Check and request call log permission
-  Future<bool> _checkAndRequestPermission() async {
-    setState(() {
-      _isCheckingPermission = true;
-      _permissionError = null;
-    });
-
-    try {
-      log('🔐 Checking call log permission');
-
-      final status = await Permission.phone.status;
-
-      if (status.isGranted) {
-        log('✅ Permission already granted');
-        setState(() {
-          _isCheckingPermission = false;
-        });
-        return true;
-      } else if (status.isDenied) {
-        log('⚠️ Permission denied, requesting...');
-        final result = await Permission.phone.request();
-
-        if (result.isGranted) {
-          log('✅ Permission granted after request');
-          setState(() {
-            _isCheckingPermission = false;
-          });
-          return true;
-        } else {
-          log('❌ Permission denied by user');
-          setState(() {
-            _isCheckingPermission = false;
-            _permissionError =
-                'Call log permission is required to log calls automatically';
-          });
-          return false;
-        }
-      } else if (status.isPermanentlyDenied) {
-        log('❌ Permission permanently denied');
-        setState(() {
-          _isCheckingPermission = false;
-          _permissionError =
-              'Permission denied. Please enable in app settings.';
-        });
-        return false;
-      }
-
-      setState(() {
-        _isCheckingPermission = false;
-      });
-      return false;
-    } catch (e) {
-      log('❌ Error checking permission: $e');
-      setState(() {
-        _isCheckingPermission = false;
-        _permissionError = 'Error checking permissions';
-      });
-      return false;
-    }
-  }
-
-  /// Search for most recent call with this number
-  Future<void> _searchCallLog() async {
-    if (!await _checkAndRequestPermission()) {
-      return;
-    }
-
-    setState(() {
-      _isSearchingCallLog = true;
-      _foundCall = null;
-      _callLogChecked = true;
-    });
-
-    try {
-      log('🔍 Searching call log for number: ${widget.phoneNumber}');
-
-      final Iterable<call_log.CallLogEntry> entries =
-          await call_log.CallLog.query(
-            number: widget.phoneNumber,
-            dateFrom: DateTime.now()
-                .subtract(const Duration(days: 7))
-                .millisecondsSinceEpoch,
-            dateTo: DateTime.now().millisecondsSinceEpoch,
-          );
-
-      if (entries.isNotEmpty) {
-        final mostRecent = entries.first;
-        log(
-          '✅ Found call: ${mostRecent.callType}, duration: ${mostRecent.duration}s',
-        );
-
-        setState(() {
-          _foundCall = mostRecent;
-          _isSearchingCallLog = false;
-        });
-      } else {
-        log('⚠️ No calls found in last 7 days');
-        setState(() {
-          _isSearchingCallLog = false;
-        });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No recent calls found in last 7 days'),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      log('❌ Error searching call log: $e');
-      setState(() {
-        _isSearchingCallLog = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error searching call log: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
   }
 
   /// Show datetime picker for follow-up scheduling
@@ -229,27 +97,14 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
     });
   }
 
-  String _getCallTypeForAPI(call_log.CallType? callType) {
-    if (callType == null) return 'OUTGOING';
-    switch (callType) {
-      case call_log.CallType.incoming:
-        return 'INCOMING';
-      case call_log.CallType.outgoing:
-        return 'OUTGOING';
-      case call_log.CallType.missed:
-        return 'MISSED';
-      default:
-        return 'OUTGOING';
-    }
-  }
-
   /// Submit the interaction
   Future<void> _submitInteraction() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (!_canSubmit) {
       String message;
-      if (_selectedCallType == CallType.followUpScheduled &&
+      if ((_selectedCallType == CallType.followUpScheduled ||
+              _selectedCallType == CallType.callbackRequested) &&
           _selectedDateTime == null) {
         message = 'Please provide call notes and schedule date/time';
       } else {
@@ -265,6 +120,8 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
     final provider = context.read<RemarkProvider>();
     provider.clearMessages();
 
+    final duration = int.tryParse(_callDurationController.text.trim()) ?? 0;
+
     // Build interaction request
     final request = LeadInteractionRequest(
       callType: _selectedCallType,
@@ -272,8 +129,9 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
       callNotes: _callNotesController.text.trim().isNotEmpty
           ? _callNotesController.text.trim()
           : null,
-      callDuration: _foundCall?.duration,
-      followUpStatus: _selectedCallType == CallType.followUpScheduled
+      callDuration: duration > 0 ? duration : null,
+      followUpStatus: (_selectedCallType == CallType.followUpScheduled ||
+              _selectedCallType == CallType.callbackRequested)
           ? _selectedFollowUpStatus
           : null,
       followUpNotes: _followUpNotesController.text.trim().isNotEmpty
@@ -415,124 +273,6 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Call log search button
-              ElevatedButton.icon(
-                onPressed: _isSearchingCallLog ? null : _searchCallLog,
-                icon: _isSearchingCallLog
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      )
-                    : const Icon(Icons.search),
-                label: Text(
-                  _isSearchingCallLog ? 'Searching...' : 'Search Call Log',
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.info,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-
-              if (_permissionError != null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline, color: AppColors.error),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _permissionError!,
-                          style: const TextStyle(color: AppColors.error),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              if (_foundCall != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.success),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.check_circle,
-                            color: AppColors.success,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Call Found',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.success,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Type: ${_foundCall!.callType.toString().split('.').last.toUpperCase()}',
-                      ),
-                      Text('Duration: ${(_foundCall!.duration ?? 0)} seconds'),
-                      Text(
-                        'Time: ${DateFormat('MMM dd, yyyy HH:mm').format(DateTime.fromMillisecondsSinceEpoch(_foundCall!.timestamp!))}',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              if (_callLogChecked && _foundCall == null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.warning),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline, color: AppColors.warning),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'No recent calls found. You can still add interaction manually.',
-                          style: TextStyle(color: AppColors.warning),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: 24),
-
               // Call Notes field
               const Text(
                 'Call Notes',
@@ -557,8 +297,33 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
               ),
               const SizedBox(height: 24),
 
+              // Call Duration field
+              const Text(
+                'Call Duration (seconds)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _callDurationController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'e.g., 60',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                ),
+              ),
+              const SizedBox(height: 24),
+
               // Follow-up fields (conditional on call type)
-              if (_selectedCallType == CallType.followUpScheduled) ...[
+              if (_selectedCallType == CallType.followUpScheduled ||
+                  _selectedCallType == CallType.callbackRequested) ...[
                 const Text(
                   'Follow-up Details',
                   style: TextStyle(
@@ -643,7 +408,7 @@ class _AddRemarkScreenState extends State<AddRemarkScreen> {
               // Submit button
               Consumer<RemarkProvider>(
                 builder: (context, provider, _) {
-                  final isEnabled = !provider.isLoading && _foundCall != null;
+                  final isEnabled = !provider.isLoading && _canSubmit;
                   return ElevatedButton(
                     onPressed: isEnabled ? _submitInteraction : null,
                     style: ElevatedButton.styleFrom(

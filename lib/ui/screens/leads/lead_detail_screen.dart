@@ -5,8 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:call_log/call_log.dart' as call_log;
 import 'package:crm_admin/core/constants/app_colors.dart';
 import 'package:crm_admin/core/api/api_client.dart';
 import 'package:crm_admin/core/api/api_endpoints.dart';
@@ -41,11 +39,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
   final _formKey = GlobalKey<FormState>();
   final _callNotesController = TextEditingController();
   final _followUpNotesController = TextEditingController();
-  bool _isCheckingPermission = false;
-  bool _isSearchingCallLog = false;
-  call_log.CallLogEntry? _foundCall;
-  String? _permissionError;
-  bool _callLogChecked = false;
+  final _callDurationController = TextEditingController(text: '0');
+  // Removed call log tracking variables
   String _selectedCallType = CallType.newLead;
   String _selectedFollowUpStatus2 = 'PENDING';
   DateTime? _selectedDateTime;
@@ -76,6 +71,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
     _tabController.dispose();
     _callNotesController.dispose();
     _followUpNotesController.dispose();
+    _callDurationController.dispose();
     super.dispose();
   }
 
@@ -860,16 +856,11 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
   void _showAddRemarkDialog() {
     setState(() {
       _showAddForm = !_showAddForm;
-      if (_showAddForm && !_callLogChecked) {
-        // Auto search call log when opening form
-        Future.delayed(Duration.zero, _searchCallLog);
-      }
     });
   }
 
   // Check if submit button should be enabled
   bool get _canSubmit {
-    if (_foundCall == null) return false;
     final hasContent = _callNotesController.text.trim().isNotEmpty;
     if (_selectedCallType == CallType.followUpScheduled ||
         _selectedCallType == CallType.callbackRequested) {
@@ -878,133 +869,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
     return hasContent;
   }
 
-  // Check and request call log permission
-  Future<bool> _checkAndRequestPermission() async {
-    setState(() {
-      _isCheckingPermission = true;
-      _permissionError = null;
-    });
-
-    try {
-      dev.log('🔐 Checking call log permission');
-      final status = await Permission.phone.status;
-
-      if (status.isGranted) {
-        dev.log('✅ Permission already granted');
-        setState(() {
-          _isCheckingPermission = false;
-        });
-        return true;
-      } else if (status.isDenied) {
-        dev.log('⚠️ Permission denied, requesting...');
-        final result = await Permission.phone.request();
-
-        if (result.isGranted) {
-          dev.log('✅ Permission granted after request');
-          setState(() {
-            _isCheckingPermission = false;
-          });
-          return true;
-        } else {
-          dev.log('❌ Permission denied by user');
-          setState(() {
-            _isCheckingPermission = false;
-            _permissionError =
-                'Call log permission is required to log calls automatically';
-          });
-          return false;
-        }
-      } else if (status.isPermanentlyDenied) {
-        dev.log('❌ Permission permanently denied');
-        setState(() {
-          _isCheckingPermission = false;
-          _permissionError =
-              'Permission denied. Please enable in app settings.';
-        });
-        return false;
-      }
-
-      setState(() {
-        _isCheckingPermission = false;
-      });
-      return false;
-    } catch (e) {
-      dev.log('❌ Error checking permission: $e');
-      setState(() {
-        _isCheckingPermission = false;
-        _permissionError = 'Error checking permissions';
-      });
-      return false;
-    }
-  }
-
-  // Search for most recent call with this number
-  Future<void> _searchCallLog() async {
-    if (_lead == null) return;
-
-    if (!await _checkAndRequestPermission()) {
-      return;
-    }
-
-    setState(() {
-      _isSearchingCallLog = true;
-      _foundCall = null;
-      _callLogChecked = true;
-    });
-
-    try {
-      dev.log('🔍 Searching call log for number: ${_lead!.contactPhone}');
-
-      final Iterable<call_log.CallLogEntry> entries =
-          await call_log.CallLog.query(
-            number: _lead!.contactPhone,
-            dateFrom: DateTime.now()
-                .subtract(const Duration(days: 7))
-                .millisecondsSinceEpoch,
-            dateTo: DateTime.now().millisecondsSinceEpoch,
-          );
-
-      if (entries.isNotEmpty) {
-        final mostRecent = entries.first;
-        dev.log(
-          '✅ Found call: ${mostRecent.callType}, duration: ${mostRecent.duration}s',
-        );
-
-        setState(() {
-          _foundCall = mostRecent;
-          _isSearchingCallLog = false;
-        });
-      } else {
-        dev.log('⚠️ No calls found in last 7 days');
-        setState(() {
-          _isSearchingCallLog = false;
-        });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No recent calls found in last 7 days'),
-              backgroundColor: AppColors.warning,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      dev.log('❌ Error searching call log: $e');
-      setState(() {
-        _isSearchingCallLog = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error searching call log: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
+  // Removed call log permission and search methods
 
   // Show datetime picker for follow-up scheduling
   Future<void> _pickDateTime() async {
@@ -1043,9 +908,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
 
     if (!_canSubmit) {
       String message;
-      if (_foundCall == null) {
-        message = 'Please search and find a call in call logs first';
-      } else if ((_selectedCallType == CallType.followUpScheduled ||
+      if ((_selectedCallType == CallType.followUpScheduled ||
               _selectedCallType == CallType.callbackRequested) &&
           _selectedDateTime == null) {
         message = 'Please provide call notes and schedule date/time';
@@ -1062,6 +925,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
     final provider = context.read<RemarkProvider>();
     provider.clearMessages();
 
+    final duration = int.tryParse(_callDurationController.text.trim()) ?? 0;
+
     // Build interaction request
     final request = LeadInteractionRequest(
       callType: _selectedCallType,
@@ -1069,7 +934,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
       callNotes: _callNotesController.text.trim().isNotEmpty
           ? _callNotesController.text.trim()
           : null,
-      callDuration: _foundCall?.duration,
+      callDuration: duration > 0 ? duration : null,
       followUpStatus:
           (_selectedCallType == CallType.followUpScheduled ||
               _selectedCallType == CallType.callbackRequested)
@@ -1103,9 +968,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
     if (mounted) {
       _callNotesController.clear();
       _followUpNotesController.clear();
+      _callDurationController.text = '0';
       setState(() {
-        _foundCall = null;
-        _callLogChecked = false;
         _selectedDateTime = null;
         _selectedCallType = CallType.newLead;
         _selectedFollowUpStatus2 = 'PENDING';
@@ -1653,134 +1517,6 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
                       ),
                       const SizedBox(height: 24),
 
-                      // Call log search button
-                      ElevatedButton.icon(
-                        onPressed: _isSearchingCallLog ? null : _searchCallLog,
-                        icon: _isSearchingCallLog
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                            : const Icon(Icons.search),
-                        label: Text(
-                          _isSearchingCallLog
-                              ? 'Searching...'
-                              : 'Search Call Log',
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.info,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 48),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-
-                      if (_permissionError != null) ...[
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.error_outline,
-                                color: AppColors.error,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _permissionError!,
-                                  style: const TextStyle(
-                                    color: AppColors.error,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-
-                      if (_foundCall != null) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.success),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Row(
-                                children: [
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: AppColors.success,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Call Found',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.success,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Type: ${_foundCall!.callType.toString().split('.').last.toUpperCase()}',
-                              ),
-                              Text(
-                                'Duration: ${(_foundCall!.duration ?? 0)} seconds',
-                              ),
-                              Text(
-                                'Time: ${DateFormat('MMM dd, yyyy HH:mm').format(DateTime.fromMillisecondsSinceEpoch(_foundCall!.timestamp!))}',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-
-                      if (_callLogChecked && _foundCall == null) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.warning),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                color: AppColors.warning,
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  'No recent calls found. You can still add interaction manually.',
-                                  style: TextStyle(color: AppColors.warning),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-
                       const SizedBox(height: 24),
 
                       // Call Notes field
@@ -1798,6 +1534,30 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
                         maxLines: 3,
                         decoration: InputDecoration(
                           hintText: 'Enter details about the call...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Call Duration field
+                      const Text(
+                        'Call Duration (seconds)',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _callDurationController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          hintText: 'e.g., 60',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -1899,7 +1659,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
                       Consumer<RemarkProvider>(
                         builder: (context, provider, _) {
                           final isEnabled =
-                              !provider.isLoading && _foundCall != null;
+                              !provider.isLoading && _canSubmit;
                           return ElevatedButton(
                             onPressed: isEnabled ? _submitInteraction : null,
                             style: ElevatedButton.styleFrom(
